@@ -1,13 +1,13 @@
 # Auto-ADMET
-Automated Machine Learning for Small Molecule ADMET Prediction
+Automated Machine Learning (AutoML) for Small Molecule Property Prediction
 
 
 ## Description
 
 
-This repository contains code and data for the work on  Automated Machine Learning (AutoML) for Small Molecule Pharmacokinetic Prediction".
+This repository contains code and data for the work on  Automated Machine Learning (AutoML) for Small Molecule Property Prediction.
 
-For this work, an evolutionary-based  method (i.e., a grammar-based genetic programming) is used for searching and optimising machine learning (ML) pipelines in the context of small molecule pharmacokinetic (PK) prediction. Small Molecule Representation, Feature Scaling, Feature Selection, and ML Modelling are taking into account to compose the predictive ML-driven pipelines for PK.
+For this work, an evolutionary-based  method (i.e., grammar-based genetic programming) is used to search and optimise machine learning (ML) pipelines in the context of small molecule property prediction (e.g., pharmacokinetic, toxicity, general properties, etc.). Small Molecule Representation, Feature Scaling, Feature Selection, and ML Modelling are considered to compose the predictive ML-driven pipelines for PK.
 
 ## How to Install?
 
@@ -20,7 +20,7 @@ Our method uses Anaconda to install the requirements. It is worth noting we are 
 
 `conda activate automl4pk`
 
-## How to use the AutoML method considering the Python code availabe?
+## How to use the AutoML method considering the Python code available?
 
 After activating automl4pk environment, run:
 
