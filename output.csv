@@ -1,0 +1,2 @@
+seed,elapsed_time,generation,best_pipeline,result_cv,result_test
+1,300.5715527534485,19,General_Descriptors$Advanced_Descriptors$Graph_based_Signatures$Toxicophores$Fragments#None#SelectPercentile$95$f_classif#ExtraTreesClassifier$35$entropy$6$15$12$None$None,0.5199883566747007,0.4636839952809614
