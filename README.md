@@ -48,5 +48,5 @@ Optional parameters can also be used:
 `python automl4pk.py datasets/01_caco2_train.csv datasets/01_caco2_blindtest.csv . -pop_size 30 -xover_rate 0.9 -mut_rate 0.1 -time_budget_min 60 -time_budget_minutes_alg_eval 5 -seed 42 -num_cores 1`
 
 
-## Publication
+## Publications
 Alex de Sá, and David Ascher, Towards Evolutionary-based Automated Machine Learning for Small Molecule Pharmacokinetic Prediction, GECCO Companion (ECADA workshop), 2024.​ https://dl.acm.org/doi/abs/10.1145/3638530.3664166
