@@ -1,17 +1,17 @@
 # Auto-ADMET
-Automated Machine Learning (AutoML) for Small Molecule Property Prediction
+An Effective and Interpretable Evolutionary-based AutoML Method for Chemical ADMET Property Prediction
 
 
 ## Description
 
 
-This repository contains code and data for the work on  Automated Machine Learning (AutoML) for Small Molecule Property Prediction.
+This repository contains code and data for Auto-ADMET's work, which is an Automated Machine Learning (AutoML) method targetting personalised predictions for Absorption, Distribution, Metabolism, Excretion, and Toxicity (ADMET) properties.
 
-For this work, an evolutionary-based  method (i.e., grammar-based genetic programming) is used to search and optimise machine learning (ML) pipelines in the context of small molecule property prediction (e.g., pharmacokinetic, toxicity, general properties, etc.). Small Molecule Representation, Feature Scaling, Feature Selection, and ML Modelling are considered to compose the predictive ML-driven pipelines for PK.
+For this work, an evolutionary-based  method (i.e., grammar-based genetic programming) is used to search and optimise machine learning (ML) pipelines in the context of chemical ADMET property prediction. Chemical Representation, Feature Scaling, Feature Selection, and ML Modelling are considered to compose the predictive ML-driven pipelines for ADMET.
 
 ## How to Install?
 
-Our method uses Anaconda to install the requirements. It is worth noting we are relying on [alogos](https://github.com/robert-haas/alogos) for the basics on GGP.
+Our method uses Anaconda to install the requirements. It is worth noting we are relying on [alogos](https://github.com/robert-haas/alogos) for the basics of GGP.
 
 `conda env create -f requirements.yaml`
 
