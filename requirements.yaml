@@ -1,4 +1,4 @@
-name: automl4pk
+name: autoadmet
 channels:
   - defaults
 dependencies:
