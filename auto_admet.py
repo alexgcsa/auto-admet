@@ -1,1237 +1,1016 @@
-import warnings
-warnings.filterwarnings("ignore")
+import random
+from collections import defaultdict
+from copy import deepcopy
 import time
 import multiprocessing
-import alogos as al
-import random
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import Normalizer, MaxAbsScaler, MinMaxScaler, RobustScaler, StandardScaler
+from sklearn.feature_selection import VarianceThreshold, SelectPercentile, SelectFpr, SelectFwe, SelectFdr, chi2, f_classif
+import warnings
 from sklearn.ensemble import ExtraTreesClassifier, AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 from xgboost import XGBClassifier
-from sklearn.datasets import load_breast_cancer
+warnings.filterwarnings("ignore")
+from sklearn.metrics import make_scorer, matthews_corrcoef, roc_auc_score, recall_score, average_precision_score, precision_score, accuracy_score
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import make_scorer, matthews_corrcoef
-from sklearn.preprocessing import Normalizer, MaxAbsScaler, MinMaxScaler, RobustScaler, StandardScaler
-from sklearn.feature_selection import VarianceThreshold, SelectPercentile, SelectFpr, SelectFwe, SelectFdr, chi2, f_classif
-from sklearn.metrics import matthews_corrcoef
-import pandas as pd
-import numpy as np
-import random
+from datetime import datetime
 import argparse
 
-def crossover(parent1, parent2, grammar, seed):
-    crossover_point = random.randint(1, min(len(parent1), len(parent2)) - 1)
-    child1 = parent1[:crossover_point] + parent2[crossover_point:]
-    child2 = parent2[:crossover_point] + parent1[crossover_point:]
-    return ensure_valid_sentence(child1, grammar), ensure_valid_sentence(child2, grammar)
-
-def ensure_valid_sentence(sentence, grammar):
-    valid_symbols = set(symbol for expansion in grammar.values() for symbols in expansion for symbol in symbols)
-    valid_symbols.add("#")
-    valid_symbols.add("$")
-    return "".join(symbol for symbol in sentence if symbol in valid_symbols)
-
-def mutate(sentence, grammar, start_symbol, seed, mutation_rate=0.1):
-    mutated_sentence = ""
-    for symbol in sentence:
-        if random.random() < mutation_rate:
-            mutated_sentence += random.choice(grammar.get(symbol, [symbol]))
-        else:
-            mutated_sentence += symbol
-    return mutated_sentence
-
-def check_erratic_phenotypes(list_invalid, phenotype):
-    for i in list_invalid:
-        if i in phenotype:
-            return True
-
-    return False
-        
-    
-
-def evolve(population, grammar, start_symbol, mutation_rate, crossover_rate, dataset_path, time_budget_minutes_alg_eval, num_cores, resample, generation, seed):
-    pop_fitness_scores = evaluate_population_parallel(population, dataset_path, time_budget_minutes_alg_eval, num_cores, resample, generation)
-    population = pop_fitness_scores[0]
-    fitness_scores = pop_fitness_scores[1]
-    total_fitness = sum(fitness_scores)
-    new_population = []
-
-    for i in range(len(population)):
-        print("%s, %f"%(population[i], fitness_scores[i]))
-
+class BNFGrammar:
+    def __init__(self):
+        self.grammar = defaultdict(list)
+        self.non_terminals = set()
+        self.terminals = set()
         
 
-    num_elites = 1
-    elites_indices = sorted(range(len(population)), key=lambda i: fitness_scores[i], reverse=True)[:num_elites]
-    elites = [population[i] for i in elites_indices]    
-    new_population.extend(elites)
+    def load_grammar(self, bnf_text: str):
+        """
+        Parses the BNF grammar from a string.
+        """
+        for line in bnf_text.strip().splitlines():
+            if "::=" in line:
+                lhs, rhs = line.split("::=", 1)
+                lhs = lhs.strip()
+                self.non_terminals.add(lhs)
+                rhs_options = [option.strip() for option in rhs.split("|")]
+                for option in rhs_options:
+                    self.grammar[lhs].append(option.split())
+                    for token in option.split():
+                        if token not in self.non_terminals:
+                            self.terminals.add(token)
+                            
+
+    def generate_parse_tree(self, symbol: str = "<start>", max_depth: int = 10) -> dict:
+        """
+        Generates a parse tree starting from the given symbol, ensuring mandatory grammar components are included.
+        """
+        if max_depth <= 0 or symbol not in self.grammar:
+            return symbol  # Return the symbol as a terminal if max depth is reached
     
-    while len(new_population) < len(population):
-        if random.random() < crossover_rate:
-            parent1 = random.choices(population, weights=fitness_scores, k=1)[0]
-            parent2 = random.choices(population, weights=fitness_scores, k=1)[0]
-            child1, child2 = crossover(parent1, parent2, grammar, seed)
-        else:
-            child1, child2 = random.choices(population, k=2)
+        # Strictly enforce the `<start>` rule
+        if symbol == "<start>":
+            # Generate each mandatory component
+            feature_def = self.generate_parse_tree("<feature_definition>", max_depth - 1)
+            scaling = self.generate_parse_tree("<feature_scaling>", max_depth - 1)
+            selection = self.generate_parse_tree("<feature_selection>", max_depth - 1)
+            ml_algo = self.generate_parse_tree("<ml_algorithms>", max_depth - 1)
+    
+            return {symbol: [feature_def, "#", scaling, "#", selection, "#", ml_algo]}
+    
+        # Select a random production for other non-terminals
+        production = random.choice(self.grammar[symbol])
+        return {symbol: [self.generate_parse_tree(token, max_depth - 1) for token in production]}
+
+    
+    def parse_tree_to_string(self, tree) -> str:
+        """
+        Reconstructs a string from the parse tree.
+        """
+        if isinstance(tree, str):
+            # Leaf node (terminal)
+            return tree
+        # Non-terminal with its production rules as children
+        root, children = list(tree.items())[0]
+        return " ".join(self.parse_tree_to_string(child) for child in children)
+
+    
+    def validate_parse_tree(self, tree, symbol="<start>") -> bool:
+        """
+        Validates if the parse tree conforms to the grammar and respects the `<start>` structure.
+        """
+        if isinstance(tree, str):
+            return tree in self.terminals  # Check terminal validity
+    
+        if not isinstance(tree, dict) or len(tree) != 1:
+            return False
+    
+        root, children = list(tree.items())[0]
+        if root != symbol:
+            return False
+    
+        if symbol == "<start>":
+            # Check `<start>` structure
+            if len(children) != 7:
+                return False
+            expected_symbols = ["<feature_definition>", "#", "<feature_scaling>", "#", "<feature_selection>", "#", "<ml_algorithms>"]
+            for i, child_symbol in enumerate(expected_symbols):
+                if i % 2 == 0 and not self.validate_parse_tree(children[i], child_symbol):  # Validate non-terminals
+                    return False
+                if i % 2 == 1 and children[i] != "#":  # Ensure separator
+                    return False
+    
+        # Validate other non-terminals
+        for production in self.grammar[symbol]:
+            if len(production) == len(children) and all(
+                self.validate_parse_tree(child, production[i])
+                for i, child in enumerate(children)
+            ):
+                return True
+                
+        return False
         
-        child1 = mutate(child1, grammar, start_symbol, seed, mutation_rate)
-        child2 = mutate(child2, grammar, start_symbol, seed, mutation_rate)
 
+class MLAlgorithmTransformer:
+    def __init__(self):
+        pass
 
-        if ("$$" not in child1) and ("$#" not in child1) and ("$5" not in child1) and ("##" not in child1) and ("###$" not in child1):
-            new_population.append(child1)
-
-        if len(new_population) < len(population):
-            if ("$$" not in child2) and ("$#" not in child2) and ("$5" not in child2) and ("##" not in child2) and ("###$" not in child2):
-                new_population.append(child2)            
-
-    return new_population
-
-def represent(list_of_feature_types, dataset_df):    
-
-    columns = []
-    for lft in list_of_feature_types:
-        if lft == "General_Descriptors":
-            columns += ["HeavyAtomCount","MolLogP","NumHeteroatoms","NumRotatableBonds","RingCount","TPSA","LabuteASA","MolWt","FCount","FCount2"]
-        elif lft == "Advanced_Descriptors":
-            columns += ["BalabanJ","BertzCT","Chi0","Chi0n","Chi0v","Chi1","Chi1n","Chi1v","Chi2n","Chi2v","Chi3n","Chi3v","Chi4n","Chi4v","HallKierAlpha","Kappa1","Kappa2","Kappa3","NHOHCount","NOCount","PEOE_VSA1","PEOE_VSA10","PEOE_VSA11","PEOE_VSA12","PEOE_VSA13","PEOE_VSA14","PEOE_VSA2","PEOE_VSA3","PEOE_VSA4","PEOE_VSA5","PEOE_VSA6","PEOE_VSA7","PEOE_VSA8","PEOE_VSA9","SMR_VSA1","SMR_VSA10","SMR_VSA2","SMR_VSA3","SMR_VSA4","SMR_VSA5","SMR_VSA6","SMR_VSA7","SMR_VSA8","SMR_VSA9","SlogP_VSA1","SlogP_VSA10","SlogP_VSA11","SlogP_VSA12","SlogP_VSA2","SlogP_VSA3","SlogP_VSA4","SlogP_VSA5","SlogP_VSA6","SlogP_VSA7","SlogP_VSA8","SlogP_VSA9","VSA_EState1","VSA_EState10","VSA_EState2","VSA_EState3","VSA_EState4","VSA_EState5","VSA_EState6","VSA_EState7","VSA_EState8","VSA_EState9"]
-        elif lft == "Toxicophores":
-            columns += ["Tox_1","Tox_2","Tox_3","Tox_4","Tox_5","Tox_6","Tox_7","Tox_8","Tox_9","Tox_10","Tox_11","Tox_12","Tox_13","Tox_14","Tox_15","Tox_16","Tox_17","Tox_18","Tox_19","Tox_20","Tox_21","Tox_22","Tox_23","Tox_24","Tox_25","Tox_26","Tox_27","Tox_28","Tox_29","Tox_30","Tox_31","Tox_32","Tox_33","Tox_34","Tox_35","Tox_36"]
-        elif lft == "Fragments":
-            columns += ["fr_Al_COO","fr_Al_OH","fr_Al_OH_noTert","fr_ArN","fr_Ar_COO","fr_Ar_N","fr_Ar_NH","fr_Ar_OH","fr_COO","fr_COO2","fr_C_O","fr_C_O_noCOO","fr_C_S","fr_HOCCN","fr_Imine","fr_NH0","fr_NH1","fr_NH2","fr_N_O","fr_Ndealkylation1","fr_Ndealkylation2","fr_Nhpyrrole","fr_SH","fr_aldehyde","fr_alkyl_carbamate","fr_alkyl_halide","fr_allylic_oxid","fr_amide","fr_amidine","fr_aniline","fr_aryl_methyl","fr_azide","fr_azo","fr_barbitur","fr_benzene","fr_benzodiazepine","fr_bicyclic","fr_diazo","fr_dihydropyridine","fr_epoxide","fr_ester","fr_ether","fr_furan","fr_guanido","fr_halogen","fr_hdrzine","fr_hdrzone","fr_imidazole","fr_imide","fr_isocyan","fr_isothiocyan","fr_ketone","fr_ketone_Topliss","fr_lactam","fr_lactone","fr_methoxy","fr_morpholine","fr_nitrile","fr_nitro","fr_nitro_arom","fr_nitro_arom_nonortho","fr_nitroso","fr_oxazole","fr_oxime","fr_para_hydroxylation","fr_phenol","fr_phenol_noOrthoHbond","fr_phos_acid","fr_phos_ester","fr_piperdine","fr_piperzine","fr_priamide","fr_prisulfonamd","fr_pyridine","fr_quatN","fr_sulfide","fr_sulfonamd","fr_sulfone","fr_term_acetylene","fr_tetrazole","fr_thiazole","fr_thiocyan","fr_thiophene","fr_unbrch_alkane","fr_urea"]
-        elif lft == "Graph_based_Signatures":
-            columns += ["Acceptor_Count","Aromatic_Count","Donor_Count","Hydrophobe_Count","NegIonizable_Count","PosIonizable_Count","Acceptor:Acceptor-6.00","Acceptor:Aromatic-6.00","Acceptor:Donor-6.00","Acceptor:Hydrophobe-6.00","Acceptor:NegIonizable-6.00","Acceptor:PosIonizable-6.00","Aromatic:Aromatic-6.00","Aromatic:Donor-6.00","Aromatic:Hydrophobe-6.00","Aromatic:NegIonizable-6.00","Aromatic:PosIonizable-6.00","Donor:Donor-6.00","Donor:Hydrophobe-6.00","Donor:NegIonizable-6.00","Donor:PosIonizable-6.00","Hydrophobe:Hydrophobe-6.00","Hydrophobe:NegIonizable-6.00","Hydrophobe:PosIonizable-6.00","NegIonizable:NegIonizable-6.00","NegIonizable:PosIonizable-6.00","PosIonizable:PosIonizable-6.00","Acceptor:Acceptor-4.00","Acceptor:Aromatic-4.00","Acceptor:Donor-4.00","Acceptor:Hydrophobe-4.00","Acceptor:NegIonizable-4.00","Acceptor:PosIonizable-4.00","Aromatic:Aromatic-4.00","Aromatic:Donor-4.00","Aromatic:Hydrophobe-4.00","Aromatic:NegIonizable-4.00","Aromatic:PosIonizable-4.00","Donor:Donor-4.00","Donor:Hydrophobe-4.00","Donor:NegIonizable-4.00","Donor:PosIonizable-4.00","Hydrophobe:Hydrophobe-4.00","Hydrophobe:NegIonizable-4.00","Hydrophobe:PosIonizable-4.00","NegIonizable:NegIonizable-4.00","NegIonizable:PosIonizable-4.00","PosIonizable:PosIonizable-4.00","Acceptor:Acceptor-2.00","Acceptor:Aromatic-2.00","Acceptor:Donor-2.00","Acceptor:Hydrophobe-2.00","Acceptor:NegIonizable-2.00","Acceptor:PosIonizable-2.00","Aromatic:Aromatic-2.00","Aromatic:Donor-2.00","Aromatic:Hydrophobe-2.00","Aromatic:NegIonizable-2.00","Aromatic:PosIonizable-2.00","Donor:Donor-2.00","Donor:Hydrophobe-2.00","Donor:NegIonizable-2.00","Donor:PosIonizable-2.00","Hydrophobe:Hydrophobe-2.00","Hydrophobe:NegIonizable-2.00","Hydrophobe:PosIonizable-2.00","NegIonizable:NegIonizable-2.00","NegIonizable:PosIonizable-2.00","PosIonizable:PosIonizable-2.00"]
-        
-    mod_dataset_df = None
-    try:
-        mod_dataset_df = dataset_df[columns]
-    except:
-        print("Error representation. ")
-
-
-    return mod_dataset_df
-
-def represent_train_test(list_of_feature_types, training_df, testing_df):    
-
-    columns = []
-    for lft in list_of_feature_types:
-        if lft == "General_Descriptors":
-            columns += ["HeavyAtomCount","MolLogP","NumHeteroatoms","NumRotatableBonds","RingCount","TPSA","LabuteASA","MolWt","FCount","FCount2"]
-        elif lft == "Advanced_Descriptors":
-            columns += ["BalabanJ","BertzCT","Chi0","Chi0n","Chi0v","Chi1","Chi1n","Chi1v","Chi2n","Chi2v","Chi3n","Chi3v","Chi4n","Chi4v","HallKierAlpha","Kappa1","Kappa2","Kappa3","NHOHCount","NOCount","PEOE_VSA1","PEOE_VSA10","PEOE_VSA11","PEOE_VSA12","PEOE_VSA13","PEOE_VSA14","PEOE_VSA2","PEOE_VSA3","PEOE_VSA4","PEOE_VSA5","PEOE_VSA6","PEOE_VSA7","PEOE_VSA8","PEOE_VSA9","SMR_VSA1","SMR_VSA10","SMR_VSA2","SMR_VSA3","SMR_VSA4","SMR_VSA5","SMR_VSA6","SMR_VSA7","SMR_VSA8","SMR_VSA9","SlogP_VSA1","SlogP_VSA10","SlogP_VSA11","SlogP_VSA12","SlogP_VSA2","SlogP_VSA3","SlogP_VSA4","SlogP_VSA5","SlogP_VSA6","SlogP_VSA7","SlogP_VSA8","SlogP_VSA9","VSA_EState1","VSA_EState10","VSA_EState2","VSA_EState3","VSA_EState4","VSA_EState5","VSA_EState6","VSA_EState7","VSA_EState8","VSA_EState9"]
-        elif lft == "Toxicophores":
-            columns += ["Tox_1","Tox_2","Tox_3","Tox_4","Tox_5","Tox_6","Tox_7","Tox_8","Tox_9","Tox_10","Tox_11","Tox_12","Tox_13","Tox_14","Tox_15","Tox_16","Tox_17","Tox_18","Tox_19","Tox_20","Tox_21","Tox_22","Tox_23","Tox_24","Tox_25","Tox_26","Tox_27","Tox_28","Tox_29","Tox_30","Tox_31","Tox_32","Tox_33","Tox_34","Tox_35","Tox_36"]
-        elif lft == "Fragments":
-            columns += ["fr_Al_COO","fr_Al_OH","fr_Al_OH_noTert","fr_ArN","fr_Ar_COO","fr_Ar_N","fr_Ar_NH","fr_Ar_OH","fr_COO","fr_COO2","fr_C_O","fr_C_O_noCOO","fr_C_S","fr_HOCCN","fr_Imine","fr_NH0","fr_NH1","fr_NH2","fr_N_O","fr_Ndealkylation1","fr_Ndealkylation2","fr_Nhpyrrole","fr_SH","fr_aldehyde","fr_alkyl_carbamate","fr_alkyl_halide","fr_allylic_oxid","fr_amide","fr_amidine","fr_aniline","fr_aryl_methyl","fr_azide","fr_azo","fr_barbitur","fr_benzene","fr_benzodiazepine","fr_bicyclic","fr_diazo","fr_dihydropyridine","fr_epoxide","fr_ester","fr_ether","fr_furan","fr_guanido","fr_halogen","fr_hdrzine","fr_hdrzone","fr_imidazole","fr_imide","fr_isocyan","fr_isothiocyan","fr_ketone","fr_ketone_Topliss","fr_lactam","fr_lactone","fr_methoxy","fr_morpholine","fr_nitrile","fr_nitro","fr_nitro_arom","fr_nitro_arom_nonortho","fr_nitroso","fr_oxazole","fr_oxime","fr_para_hydroxylation","fr_phenol","fr_phenol_noOrthoHbond","fr_phos_acid","fr_phos_ester","fr_piperdine","fr_piperzine","fr_priamide","fr_prisulfonamd","fr_pyridine","fr_quatN","fr_sulfide","fr_sulfonamd","fr_sulfone","fr_term_acetylene","fr_tetrazole","fr_thiazole","fr_thiocyan","fr_thiophene","fr_unbrch_alkane","fr_urea"]
-        elif lft == "Graph_based_Signatures":
-            columns += ["Acceptor_Count","Aromatic_Count","Donor_Count","Hydrophobe_Count","NegIonizable_Count","PosIonizable_Count","Acceptor:Acceptor-6.00","Acceptor:Aromatic-6.00","Acceptor:Donor-6.00","Acceptor:Hydrophobe-6.00","Acceptor:NegIonizable-6.00","Acceptor:PosIonizable-6.00","Aromatic:Aromatic-6.00","Aromatic:Donor-6.00","Aromatic:Hydrophobe-6.00","Aromatic:NegIonizable-6.00","Aromatic:PosIonizable-6.00","Donor:Donor-6.00","Donor:Hydrophobe-6.00","Donor:NegIonizable-6.00","Donor:PosIonizable-6.00","Hydrophobe:Hydrophobe-6.00","Hydrophobe:NegIonizable-6.00","Hydrophobe:PosIonizable-6.00","NegIonizable:NegIonizable-6.00","NegIonizable:PosIonizable-6.00","PosIonizable:PosIonizable-6.00","Acceptor:Acceptor-4.00","Acceptor:Aromatic-4.00","Acceptor:Donor-4.00","Acceptor:Hydrophobe-4.00","Acceptor:NegIonizable-4.00","Acceptor:PosIonizable-4.00","Aromatic:Aromatic-4.00","Aromatic:Donor-4.00","Aromatic:Hydrophobe-4.00","Aromatic:NegIonizable-4.00","Aromatic:PosIonizable-4.00","Donor:Donor-4.00","Donor:Hydrophobe-4.00","Donor:NegIonizable-4.00","Donor:PosIonizable-4.00","Hydrophobe:Hydrophobe-4.00","Hydrophobe:NegIonizable-4.00","Hydrophobe:PosIonizable-4.00","NegIonizable:NegIonizable-4.00","NegIonizable:PosIonizable-4.00","PosIonizable:PosIonizable-4.00","Acceptor:Acceptor-2.00","Acceptor:Aromatic-2.00","Acceptor:Donor-2.00","Acceptor:Hydrophobe-2.00","Acceptor:NegIonizable-2.00","Acceptor:PosIonizable-2.00","Aromatic:Aromatic-2.00","Aromatic:Donor-2.00","Aromatic:Hydrophobe-2.00","Aromatic:NegIonizable-2.00","Aromatic:PosIonizable-2.00","Donor:Donor-2.00","Donor:Hydrophobe-2.00","Donor:NegIonizable-2.00","Donor:PosIonizable-2.00","Hydrophobe:Hydrophobe-2.00","Hydrophobe:NegIonizable-2.00","Hydrophobe:PosIonizable-2.00","NegIonizable:NegIonizable-2.00","NegIonizable:PosIonizable-2.00","PosIonizable:PosIonizable-2.00"]
-        
-    mod_training_df = None
-    mod_testing_df = None
-    try:
-        mod_training_df = training_df[columns]
-        mod_testing_df = testing_df[columns]
-    except:
-        return training_df, testing_df
-
-
-    return mod_training_df, mod_testing_df
-
-def normalizer(norm_hp, df):
-    try:
-        model = Normalizer(norm=norm_hp).fit(df)
-        df_np = model.transform(df)
-
-        return pd.DataFrame(df_np, columns = df.columns)
-    except:
-        return df  
-
-def max_abs_scaler(df):
-    try:
-        model = MaxAbsScaler().fit(df)
-        df_np = model.transform(df)
-
-        return pd.DataFrame(df_np, columns = df.columns)
-    except:
-        return df  
-
-def min_max_scaler(df):
-    try:
-        model = MinMaxScaler().fit(df)
-        df_np = model.transform(df)
-
-        return pd.DataFrame(df_np, columns = df.columns)
-    except:
-        return df  
-
-def standard_scaler(with_mean_str, with_std_str, df):
-    with_mean_actual = True
-    with_std_actual = True
-
-    if with_mean_str == "False":
-        with_mean_actual = False
-    if with_std_str == "False":
-        with_std_actual = False        
-    try:
-        model = StandardScaler(with_mean=with_mean_actual, with_std=with_std_actual).fit(df)
-        df_np = model.transform(df)
-
-        return pd.DataFrame(df_np, columns = df.columns)
-    except:
-        return df 
-
-def robust_scaler(with_centering_str, with_scaling_str, df):
-    with_centering_actual = True
-    with_scaling_actual = True
-
-    if with_centering_str == "False":
-        with_centering_actual = False
-    if with_scaling_str == "False":
-        with_scaling_actual = False        
-    try:
-        model = RobustScaler(with_centering=with_centering_actual, with_scaling=with_scaling_actual).fit(df)
-        df_np = model.transform(df)
-
-        return pd.DataFrame(df_np, columns = df.columns)
-    except:
-        return df
-
-
-def normalizer_train_test(norm_hp, df1, df2):
-    try:
-        model = Normalizer(norm=norm_hp).fit(df1)
-        df1_np = model.transform(df1)
-        df2_np = model.transform(df2)
-
-        return pd.DataFrame(df1_np, columns = df1.columns), pd.DataFrame(df2_np, columns = df2.columns)
-    except:
-        return df1, df2  
-
-def max_abs_scaler_train_test(df1, df2):
-    try:
-        model = MaxAbsScaler().fit(df1)
-        df1_np = model.transform(df1)
-        df2_np = model.transform(df2)
-
-        return pd.DataFrame(df1_np, columns = df1.columns), pd.DataFrame(df2_np, columns = df2.columns)
-    except:
-        return df1, df2  
-
-def min_max_scaler_train_test(df1, df2):
-    try:
-        model = MinMaxScaler().fit(df1)
-        df1_np = model.transform(df1)
-        df2_np = model.transform(df2)
-
-        return pd.DataFrame(df1_np, columns = df1.columns), pd.DataFrame(df2_np, columns = df2.columns)
-    except:
-        return df1, df2  
-
-def standard_scaler_train_test(with_mean_str, with_std_str, df1, df2):
-    with_mean_actual = True
-    with_std_actual = True
-
-    if with_mean_str == "False":
-        with_mean_actual = False
-    if with_std_str == "False":
-        with_std_actual = False        
-    try:
-        model = StandardScaler(with_mean=with_mean_actual, with_std=with_std_actual).fit(df1)
-        df1_np = model.transform(df1)
-        df2_np = model.transform(df2)
-
-        return pd.DataFrame(df1_np, columns = df1.columns), pd.DataFrame(df2_np, columns = df2.columns)
-    except:
-        return df1, df2  
-
-def robust_scaler_train_test(with_centering_str, with_scaling_str, df1, df2):
-    with_centering_actual = True
-    with_scaling_actual = True
-
-    if with_centering_str == "False":
-        with_centering_actual = False
-    if with_scaling_str == "False":
-        with_scaling_actual = False        
-    try:
-        model = RobustScaler(with_centering=with_centering_actual, with_scaling=with_scaling_actual).fit(df1)
-        df1_np = model.transform(df1)
-        df2_np = model.transform(df2)
-
-        return pd.DataFrame(df1_np, columns = df1.columns), pd.DataFrame(df2_np, columns = df2.columns)
-    except:
-        return df1, df2 
-
-
-def scale(feature_scaling, dataset_df):
-
-    if feature_scaling[0] == "None":
-        return dataset_df
-    elif feature_scaling[0] == "Normalizer":
-        mod_dataset_df = normalizer(str(feature_scaling[1]), dataset_df)
-        return mod_dataset_df
-    elif feature_scaling[0] == "MinMaxScaler":
-        mod_dataset_df = min_max_scaler(dataset_df)
-        return mod_dataset_df
-    elif feature_scaling[0] == "MaxAbsScaler":
-        mod_dataset_df = max_abs_scaler(dataset_df)
-        return mod_dataset_df    
-    elif feature_scaling[0] == "StandardScaler":
-        mod_dataset_df = standard_scaler(feature_scaling[1], feature_scaling[2], dataset_df)
-        return mod_dataset_df
-    elif feature_scaling[0] == "RobustScaler":
-        mod_dataset_df = robust_scaler(feature_scaling[1], feature_scaling[2], dataset_df)
-        return mod_dataset_df           
-    else:
-        return dataset_df
-
-def scale_train_test(feature_scaling, training_dataset_df, testing_dataset_df):
-
-    if feature_scaling[0] == "None":
-        return training_dataset_df, testing_dataset_df
-    elif feature_scaling[0] == "Normalizer":
-        mod_training_dataset_df, mod_testing_dataset_df = normalizer_train_test(str(feature_scaling[1]), training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "MinMaxScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = min_max_scaler_train_test(training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "MaxAbsScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = max_abs_scaler_train_test(training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df  
-    elif feature_scaling[0] == "StandardScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = standard_scaler_train_test(feature_scaling[1], feature_scaling[2], training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "RobustScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = robust_scaler_train_test(feature_scaling[1], feature_scaling[2], training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df , mod_testing_dataset_df          
-    else:
-        return training_dataset_df, testing_dataset_df
-
-def scale_train_test(feature_scaling, training_dataset_df, testing_dataset_df):
-
-    if feature_scaling[0] == "None":
-        return training_dataset_df, testing_dataset_df
-    elif feature_scaling[0] == "Normalizer":
-        mod_training_dataset_df, mod_testing_dataset_df = normalizer_train_test(str(feature_scaling[1]), training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "MinMaxScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = min_max_scaler_train_test(training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "MaxAbsScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = max_abs_scaler_train_test(training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df  
-    elif feature_scaling[0] == "StandardScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = standard_scaler_train_test(feature_scaling[1], feature_scaling[2], training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df, mod_testing_dataset_df
-    elif feature_scaling[0] == "RobustScaler":
-        mod_training_dataset_df, mod_testing_dataset_df = robust_scaler_train_test(feature_scaling[1], feature_scaling[2], training_dataset_df, testing_dataset_df)
-        return mod_training_dataset_df , mod_testing_dataset_df          
-    else:
-        return training_dataset_df, testing_dataset_df
-
-def select_fwe(alpha_str, score_function_str, df, label_col):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
+    def XGBoost(self, n_estimators_str, max_depth_str, max_leaves_str, learning_rate_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
     
-    try:
-        model = SelectFwe(score_func=score_function_actual, alpha = float(alpha_str)).fit(df, label_col)
-        df_np = model.transform(df)
-
-        cols_idxs = model.get_support(indices=True)
-        features_df_new = df.iloc[:,cols_idxs]
-    
-        return features_df_new
-    except Exception as e:
-        return df    
-
-def select_fdr(alpha_str, score_function_str, df, label_col):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectFdr(score_func=score_function_actual, alpha = float(alpha_str)).fit(df, label_col)
-        df_np = model.transform(df)
-
-        cols_idxs = model.get_support(indices=True)
-        features_df_new = df.iloc[:,cols_idxs]
-    
-        return features_df_new
-    except Exception as e:
-        return df    
-
-def select_fpr(alpha_str, score_function_str, df, label_col):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectFpr(score_func=score_function_actual, alpha = float(alpha_str)).fit(df, label_col)
-        df_np = model.transform(df)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df_new = df.iloc[:,cols_idxs]
-    
-        return features_df_new
-    except Exception as e:
-        return df    
-
-def select_percentile(percentile_str, score_function_str, df, label_col):
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectPercentile(score_func=score_function_actual, percentile = int(percentile_str)).fit(df, label_col)
-        df_np = model.transform(df)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df_new = df.iloc[:,cols_idxs]
-    
-        return features_df_new
-    except Exception as e:
-        return df
-
-def variance_threshold(thrsh, df, label_col):
-    try:
-        model =VarianceThreshold(threshold=thrsh).fit(df, label_col)
-        df_np = model.transform(df)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df_new = df.iloc[:,cols_idxs]
-    
-        return features_df_new
-    except Exception as e:
-        return df
-
-
-def select_fwe_train_test(alpha_str, score_function_str, df1, label_col1, df2):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectFwe(score_func=score_function_actual, alpha = float(alpha_str)).fit(df1, label_col1)
-
-        cols_idxs = model.get_support(indices=True)
-        features_df1_new = df1.iloc[:,cols_idxs]
-        features_df2_new = df2.iloc[:,cols_idxs]
-    
-        return features_df_new, features_df2_new
-    except Exception as e:
-        return df1, df2    
-
-def select_fdr_train_test(alpha_str, score_function_str, df1, label_col1, df2):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectFdr(score_func=score_function_actual, alpha = float(alpha_str)).fit(df1, label_col1)
-
-        cols_idxs = model.get_support(indices=True)
-        features_df1_new = df1.iloc[:,cols_idxs]
-        features_df2_new = df2.iloc[:,cols_idxs]
-    
-        return features_df_new, features_df2_new
-    except Exception as e:
-        return df1, df2   
-
-def select_fpr_train_test(alpha_str, score_function_str, df1, label_col1, df2):
-
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectFpr(score_func=score_function_actual, alpha = float(alpha_str)).fit(df1, label_col1)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df1_new = df1.iloc[:,cols_idxs]
-        features_df2_new = df2.iloc[:,cols_idxs]
-    
-        return features_df_new, features_df2_new
-    except Exception as e:
-        return df1, df2   
-
-def select_percentile_train_test(percentile_str, score_function_str, df1, label_col1, df2):
-    score_function_actual = f_classif
-
-    if(score_function_str == "chi2"):
-        score_function_actual = chi2       
-    
-    try:
-        model = SelectPercentile(score_func=score_function_actual, percentile = int(percentile_str)).fit(df1, label_col1)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df1_new = df1.iloc[:,cols_idxs]
-        features_df2_new = df2.iloc[:,cols_idxs]
-    
-        return features_df_new, features_df2_new
-    except Exception as e:
-        return df1, df2   
-
-def variance_threshold_train_test(thrsh, df1, label_col1, df2):
-    try:
-        model =VarianceThreshold(threshold=thrsh).fit(df1, label_col1)
-    
-        cols_idxs = model.get_support(indices=True)
-        features_df1_new = df1.iloc[:,cols_idxs]
-        features_df2_new = df2.iloc[:,cols_idxs]
-    
-        return features_df_new, features_df2_new
-    except Exception as e:
-        return df1, df2   
-
-
-def select(feature_selection, dataset_df, label_col):
-
-    if feature_selection[0] == "None":
-        return dataset_df
-    elif feature_selection[0] == "VarianceThreshold":
-        mod_dataset_df = variance_threshold(float(feature_selection[1]), dataset_df, label_col)
-        return mod_dataset_df
-    elif feature_selection[0] == "SelectPercentile":        
-        mod_dataset_df = select_percentile(feature_selection[1], feature_selection[2], dataset_df, label_col)    
-        return mod_dataset_df     
-    elif feature_selection[0] == "SelectFpr":        
-        mod_dataset_df = select_fpr(feature_selection[1], feature_selection[2], dataset_df, label_col)    
-        return mod_dataset_df
-    elif feature_selection[0] == "SelectFdr":        
-        mod_dataset_df = select_fdr(feature_selection[1], feature_selection[2], dataset_df, label_col)    
-        return mod_dataset_df
-    elif feature_selection[0] == "SelectFwe":        
-        mod_dataset_df = select_fwe(feature_selection[1], feature_selection[2], dataset_df, label_col)    
-        return mod_dataset_df          
-    else:
-        return dataset_df
-
-def select_train_test(feature_selection, dataset_df1, label_col1, dataset_df2):
-
-    if feature_selection[0] == "None":
-        return dataset_df1, dataset_df2
-    elif feature_selection[0] == "VarianceThreshold":
-        mod_dataset_df1, mod_dataset_df2  = variance_threshold_train_test(float(feature_selection[1]), dataset_df1, label_col1, dataset_df2)
-        return mod_dataset_df1, mod_dataset_df2 
-    elif feature_selection[0] == "SelectPercentile":        
-        mod_dataset_df1, mod_dataset_df2  = select_percentile_train_test(feature_selection[1], feature_selection[2], dataset_df1, label_col1, dataset_df2)    
-        return mod_dataset_df1, mod_dataset_df2      
-    elif feature_selection[0] == "SelectFpr":        
-        mod_dataset_df1, mod_dataset_df2  = select_fpr_train_test(feature_selection[1], feature_selection[2], dataset_df1, label_col1, dataset_df2)    
-        return mod_dataset_df1, mod_dataset_df2 
-    elif feature_selection[0] == "SelectFdr":        
-        mod_dataset_df1, mod_dataset_df2  = select_fdr_train_test(feature_selection[1], feature_selection[2], dataset_df1, label_col1, dataset_df2)    
-        return mod_dataset_df1, mod_dataset_df2 
-    elif feature_selection[0] == "SelectFwe":        
-        mod_dataset_df1, mod_dataset_df2  = select_fwe_train_test(feature_selection[1], feature_selection[2], dataset_df1, label_col1, dataset_df2)    
-        return mod_dataset_df1, mod_dataset_df2          
-    else:
-        return dataset_df1, dataset_df2
-
-def XGBEvaluation(dataset, n_estimators_str, max_depth_str, max_leaves_str, learning_rate_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-
-        
-    try:
         clf = XGBClassifier(n_estimators=int(n_estimators_str), max_depth=max_depth_actual, random_state=42, 
                             max_leaves=int(max_leaves_str), learning_rate=float(learning_rate_str), n_jobs=1)        
+    
+        return clf 
+    
+    
+    def GradientBoosting(self, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str, max_features_str, loss_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
+    
+        max_features_actual = None
+        if max_features_str != "None":
+            max_features_actual = max_features_str  
+    
 
-
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
-        
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-        return mean_scores   
-        
-    except:
-        return 0.0  
-
-def GradientBoostingEvalulation(dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, loss_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-
-        
-    try:
         clf = GradientBoostingClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, random_state=42, 
-                                     min_samples_split=int(min_samples_split_str), 
-                                     min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual, loss=loss_str)        
-
-
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
-        
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-        return mean_scores   
-        
-    except:
-        return 0.0  
-
-def ExtraTreesEvalulation(dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
+                                         min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str), 
+                                         max_features=max_features_actual, loss=loss_str)        
+    
+        return clf      
  
-        
-    try:
+    
+    def ExtraTrees(self, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str, max_features_str, class_weight_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
+    
+        max_features_actual = None
+        if max_features_str != "None":
+            max_features_actual = max_features_str  
+    
+        class_weight_actual = None
+        if class_weight_str != "None":
+            class_weight_actual = class_weight_str   
+     
+            
         clf = ExtraTreesClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, n_jobs=1, random_state=42, 
-                                     class_weight=class_weight_actual,  min_samples_split=int(min_samples_split_str), 
-                                     min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual)        
-
-
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
-        
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-
-        return mean_scores   
-        
-    except:
-        return 0.0  
-
-
-def RandomForestEvalulation(dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
- 
-        
-    try:
+                                   class_weight=class_weight_actual,  min_samples_split=int(min_samples_split_str), 
+                                   min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual)        
+    
+        return clf  
+    
+    
+    def RandomForest(self, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str, max_features_str, class_weight_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
+    
+        max_features_actual = None
+        if max_features_str != "None":
+            max_features_actual = max_features_str  
+    
+        class_weight_actual = None
+        if class_weight_str != "None":
+            class_weight_actual = class_weight_str   
+     
         clf = RandomForestClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, n_jobs=1, random_state=42, 
                                      class_weight=class_weight_actual,  min_samples_split=int(min_samples_split_str), 
                                      min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual)        
-
-
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
+ 
+        return clf   
         
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-
-        return mean_scores   
-        
-    except:
-        return 0.0  
-
-
-def ExtraTreeEvalulation(dataset, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                           max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
-        
-    try:
+    
+    def ExtraTree(self, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str, max_features_str, class_weight_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
+    
+        max_features_actual = None
+        if max_features_str != "None":
+            max_features_actual = max_features_str  
+    
+        class_weight_actual = None
+        if class_weight_str != "None":
+            class_weight_actual = class_weight_str   
+            
         clf = ExtraTreeClassifier(criterion=criterion_str, splitter='best', max_depth=max_depth_actual, 
-                                     min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str),                                      
-                                     max_features=max_features_actual, random_state=0)      
+                                  min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str),                                      
+                                  max_features=max_features_actual, random_state=0)      
+    
+        return clf  
+            
+    
+    def DecisionTree(self, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str, max_features_str, class_weight_str):
+        max_depth_actual = None
+        if max_depth_str != "None":
+            max_depth_actual = int(max_depth_str)
+    
+        max_features_actual = None
+        if max_features_str != "None":
+            max_features_actual = max_features_str  
+    
+        class_weight_actual = None
+        if class_weight_str != "None":
+            class_weight_actual = class_weight_str   
 
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
-        
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
 
-        return mean_scores   
-        
-    except:
-        return 0.0    
-
-
-def DecisionTreeEvalulation(dataset, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                           max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
-        
-    try:
         clf = DecisionTreeClassifier(criterion=criterion_str, splitter=splitter_str, max_depth=max_depth_actual, 
                                      min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str), 
                                      max_features=max_features_actual, random_state=0,
                                      class_weight=class_weight_actual)      
+    
+        return clf
+    
+    
+    def AdaBoost(self, alg, n_est, lr):
+        clf = AdaBoostClassifier(n_estimators=n_est, learning_rate=lr, algorithm=alg, random_state=0)
+        return clf
 
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
+
+
+class FeatureSelectionTransformer:
+    def __init__(self, training_df, testing_df, training_label_col):
+        self.training_df = training_df
+        self.testing_df = testing_df
+        self.model = None
+        self.training_label_col = training_label_col
+
+    def select_fwe(self, alpha_str, score_function_str):
+    
+        score_function_actual = f_classif
+    
+        if(score_function_str == "chi2"):
+            score_function_actual = chi2       
         
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-
-        return mean_scores   
+        try:
+            self.model = SelectFwe(score_func=score_function_actual, alpha = float(alpha_str)).fit(self.training_df, self.training_label_col)
+            #df_np = self.model.transform(self.training_df)
+    
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
         
-    except:
-        return 0.0
-
-
-def AdaBoostEvaluation(dataset, alg, n_est, lr):
-    try:
-        clf = AdaBoostClassifier(n_estimators=n_est, learning_rate=lr, algorithm=alg, random_state=0)      
-
-        y =dataset.iloc[:,-1:]
-        X = dataset[dataset.columns[:-1]]
+            return features_df_new
+        except Exception as e:
+            #print(e)            
+            return None 
+            
+    
+    def select_fdr(self, alpha_str, score_function_str):
+    
+        score_function_actual = f_classif
+    
+        if(score_function_str == "chi2"):
+            score_function_actual = chi2       
         
-        scores = cross_val_score(clf, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-        mean_scores = scores.mean()
-
-        return mean_scores   
+        try:
+            self.model = SelectFdr(score_func=score_function_actual, alpha = float(alpha_str)).fit(self.training_df, self.training_label_col)
+            #df_np = self.model.transform(self.training_df)
+    
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
         
-    except:
-        return 0.0
+            return features_df_new
+        except Exception as e:
+            #print(e)            
+            return None
+            
+    
+    def select_fpr(self, alpha_str, score_function_str):
+    
+        score_function_actual = f_classif
+    
+        if(score_function_str == "chi2"):
+            score_function_actual = chi2       
+        
+        try:
+            self.model = SelectFpr(score_func=score_function_actual, alpha = float(alpha_str)).fit(self.training_df, self.training_label_col)
+            #df_np = self.model.transform(self.training_df)
+        
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
+        
+            return features_df_new
+        except Exception as e:
+            #print(e)            
+            return None
+            
+    
+    def select_percentile(self, percentile_str, score_function_str):
+        score_function_actual = f_classif
+    
+        if(score_function_str == "chi2"):
+            score_function_actual = chi2       
+        
+        try:
+            self.model = SelectPercentile(score_func=score_function_actual, percentile = int(percentile_str)).fit(self.training_df, self.training_label_col)
+            #df_np = self.model.transform(self.training_df)
+        
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
+        
+            return features_df_new
+        except Exception as e:
+            #print(e)            
+            return None
+            
+    
+    def variance_threshold(self,thrsh):
+        try:
+            self.model =VarianceThreshold(threshold=thrsh).fit(self.training_df, training_label_col)
+            #df_np = model.transform(self.training_df)
+        
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
+        
+            return features_df_new
+        except Exception as e:
+            #print(e)
+            return None
 
-def XGBEvaluation_train_test(training_dataset, testing_dataset, n_estimators_str, max_depth_str, max_leaves_str, learning_rate_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
+    def apply_model(self):
+        try:
+            self.testing_df = self.testing_df[self.training_df.columns]
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new_testing = self.testing_df.iloc[:,cols_idxs]
+            df_np_testing = pd.DataFrame(self.model.transform(self.testing_df), columns=features_df_new_testing.columns)
+            return features_df_new_testing
+        except Exception as e:
+            #print("ERROR")
+            print(e)
+            return None
+        
 
+
+class ScalingTransformer:
+    def __init__(self, training_df, testing_df):
+        self.training_df = training_df
+        self.testing_df = testing_df
+        self.model = None
+
+    def normalizer(self, norm_hp):
+        try:
+            self.model = Normalizer(norm=norm_hp).fit(self.training_df)
+            df_np = self.model.transform(self.training_df)
+    
+            return pd.DataFrame(df_np, columns = self.training_df.columns)
+        except Exception as e:
+            #print(e)            
+            return None
+
+    
+    def max_abs_scaler(self):
+        try:
+            self.model = MaxAbsScaler().fit(self.training_df)
+            df_np = self.model.transform(self.training_df)
+    
+            return pd.DataFrame(df_np, columns = self.training_df.columns)
+        except Exception as e:
+            #print(e)            
+            return None
+
+    
+    def min_max_scaler(self):
+        try:
+            self.model = MinMaxScaler().fit(self.training_df)
+            df_np = self.model.transform(self.training_df)
+    
+            return pd.DataFrame(df_np, columns = self.training_df.columns)
+        except Exception as e:
+            #print(e)            
+            return None 
+
+    
+    def standard_scaler(self, with_mean_str, with_std_str):
+        with_mean_actual = True
+        with_std_actual = True
+    
+        if with_mean_str == "False":
+            with_mean_actual = False
+        if with_std_str == "False":
+            with_std_actual = False        
+        try:
+            self.model = StandardScaler(with_mean=with_mean_actual, with_std=with_std_actual).fit(self.training_df)
+            df_np = self.model.transform(self.training_df)
+    
+            return pd.DataFrame(df_np, columns = self.training_df.columns)
+        except Exception as e:
+            #print(e)
+            return None
+
+    
+    def robust_scaler(self, with_centering_str, with_scaling_str):
+        with_centering_actual = True
+        with_scaling_actual = True
+    
+        if with_centering_str == "False":
+            with_centering_actual = False
+        if with_scaling_str == "False":
+            with_scaling_actual = False        
+        try:
+            self.model = RobustScaler(with_centering=with_centering_actual, with_scaling=with_scaling_actual).fit(self.training_df)
+            df_np = self.model.transform(self.training_df)
+    
+            return pd.DataFrame(df_np, columns = self.training_df.columns)
+        except Exception as e:            
+            return None
+
+    def apply_model(self):
+        try:
+            df_np_testing = pd.DataFrame(self.model.transform(self.testing_df), columns = self.testing_df.columns)
+            return df_np_testing
+        except Exception as e:
+            
+            print(e)
+            return None
+        
+
+
+class GrammarBasedGP:
+    def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 5, population_size=100, 
+                 max_generations=100, max_time=60, mutation_rate=0.15, crossover_rate=0.8, crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="auc", 
+                 experiment_name = "expABC", stopping_criterion = "time", seed=0):
+        self.grammar = grammar
+        self.training_dir = training_dir
+        self.testing_dir = testing_dir
+        self.fitness_cache = fitness_cache
+        self.num_cores = num_cores
+        self.time_budget_minutes_alg_eval = time_budget_minutes_alg_eval
+        self.population_size = population_size
+        self.max_generations = max_generations
+        self.max_time = max_time
+        self.mutation_rate = mutation_rate
+        self.crossover_rate = crossover_rate
+        self.crossover_mutation_rate = crossover_mutation_rate
+        self.elitism_size = elitism_size
+        self.fitness_metric = fitness_metric
+        self.experiment_name = experiment_name
+        self.stopping_criterion = stopping_criterion
+        self.seed = seed
+        self.population = []
+
+    def select_ml_algorithms(self, ml_algorithm):
+        ml_alg_selection = MLAlgorithmTransformer()
+        if ml_algorithm[0] == "AdaBoostClassifier":
+            return ml_alg_selection.AdaBoost(str(ml_algorithm[1]), int(ml_algorithm[2]), float(ml_algorithm[3]))
+        elif ml_algorithm[0] == "DecisionTreeClassifier":
+            return ml_alg_selection.DecisionTree(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])    
+        elif ml_algorithm[0] == "ExtraTreeClassifier":
+            return ml_alg_selection.ExtraTree(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "RandomForestClassifier":
+            return ml_alg_selection.RandomForest(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "ExtraTreesClassifier":
+            return ml_alg_selection.ExtraTrees(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "GradientBoostingClassifier":
+            return ml_alg_selection.GradientBoosting(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7]) 
+        elif ml_algorithm[0] == "XGBClassifier":
+            return ml_alg_selection.XGBoost(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])         
+                            
+        else:
+            return None    
+
+    
+    def select_features(self, feature_selection, training_dataset_df, training_label_col, testing_dataset_df=None, testing=False):
+
+        cp_training_dataset_df = training_dataset_df.copy(deep=True)
+        cp_testing_datset_df = None        
+        if(testing):
+            cp_testing_datset_df = testing_dataset_df.copy(deep=True)
+
+        cp_training_label_col = training_label_col.copy(deep=True)
+        feature_selection_transformer = FeatureSelectionTransformer(cp_training_dataset_df, cp_testing_datset_df, cp_training_label_col)
+        mod_training_dataset_df = None
+        mod_testing_dataset_df = None        
+        if feature_selection[0] == "NoFeatureSelection":
+            if(testing):
+                return training_dataset_df, testing_dataset_df
+            else:
+                return training_dataset_df
+        elif feature_selection[0] == "VarianceThreshold":
+            mod_training_dataset_df = feature_selection_transformer.variance_threshold(float(feature_selection[1]))
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df
+
+        elif feature_selection[0] == "SelectPercentile":        
+            mod_training_dataset_df = feature_selection_transformer.select_percentile(feature_selection[1], feature_selection[2])    
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df   
+        elif feature_selection[0] == "SelectFpr":        
+            mod_training_dataset_df = feature_selection_transformer.select_fpr(feature_selection[1], feature_selection[2])    
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df  
+        elif feature_selection[0] == "SelectFdr":        
+            mod_training_dataset_df = feature_selection_transformer.select_fdr(feature_selection[1], feature_selection[2])    
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df  
+        elif feature_selection[0] == "SelectFwe":        
+            mod_training_dataset_df = feature_selection_transformer.select_fwe(feature_selection[1], feature_selection[2])    
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df           
+        else:
+            return None       
+
+    
+    def scale_features(self, feature_scaling, training_dataset_df, testing_dataset_df=None, testing=False):
+
+        cp_training_dataset_df = training_dataset_df.copy(deep=True)
+        cp_testing_datset_df = None
+        if(testing):
+            cp_testing_datset_df = testing_dataset_df.copy(deep=True)
+        
+        scaling_transformer = ScalingTransformer(cp_training_dataset_df, cp_testing_datset_df)
+        mod_training_dataset_df = None
+        mod_testing_dataset_df = None
+        if feature_scaling[0] == "NoScaling":
+            if(testing):
+                return training_dataset_df, testing_dataset_df
+            else:
+                return training_dataset_df
+            
+        elif feature_scaling[0] == "Normalizer":
+            mod_training_dataset_df = scaling_transformer.normalizer(str(feature_scaling[1]))
+            if(testing):
+                mod_testing_dataset_df = scaling_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df
+        elif feature_scaling[0] == "MinMaxScaler":
+            mod_training_dataset_df = scaling_transformer.min_max_scaler()
+            if(testing):
+                mod_testing_dataset_df = scaling_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df
+        elif feature_scaling[0] == "MaxAbsScaler":
+            mod_training_dataset_df = scaling_transformer.max_abs_scaler()
+            if(testing):
+                mod_testing_dataset_df = scaling_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df  
+        elif feature_scaling[0] == "StandardScaler":
+            mod_training_dataset_df  = scaling_transformer.standard_scaler(feature_scaling[1], feature_scaling[2])
+            if(testing):
+                mod_testing_dataset_df = scaling_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df
+        elif feature_scaling[0] == "RobustScaler":
+            mod_training_dataset_df = scaling_transformer.robust_scaler(feature_scaling[1], feature_scaling[2])
+            if(testing):
+                mod_testing_dataset_df = scaling_transformer.apply_model()
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df      
+        else:            
+            return None    
+    
+
+
+    def represent_molecules(self, list_of_feature_types, training_dataset_df, testing_dataset_df=None, testing=False):
+        """
+        represents a chemical dataset with descriptors.
+        """          
+    
+        columns = []
+        for lft in list_of_feature_types:
+            if lft == "General_Descriptors":
+                columns += ["HeavyAtomCount","MolLogP","NumHeteroatoms","NumRotatableBonds","RingCount","TPSA","LabuteASA","MolWt","FCount","FCount2","Acceptor_Count","Aromatic_Count","Donor_Count","Hydrophobe_Count","NegIonizable_Count","PosIonizable_Count",]
+            elif lft == "Advanced_Descriptors":
+                columns += ["BalabanJ","BertzCT","Chi0","Chi0n","Chi0v","Chi1","Chi1n","Chi1v","Chi2n","Chi2v","Chi3n","Chi3v","Chi4n","Chi4v","HallKierAlpha","Kappa1","Kappa2","Kappa3","NHOHCount","NOCount","PEOE_VSA1","PEOE_VSA10","PEOE_VSA11","PEOE_VSA12","PEOE_VSA13","PEOE_VSA14","PEOE_VSA2","PEOE_VSA3","PEOE_VSA4","PEOE_VSA5","PEOE_VSA6","PEOE_VSA7","PEOE_VSA8","PEOE_VSA9","SMR_VSA1","SMR_VSA10","SMR_VSA2","SMR_VSA3","SMR_VSA4","SMR_VSA5","SMR_VSA6","SMR_VSA7","SMR_VSA8","SMR_VSA9","SlogP_VSA1","SlogP_VSA10","SlogP_VSA11","SlogP_VSA12","SlogP_VSA2","SlogP_VSA3","SlogP_VSA4","SlogP_VSA5","SlogP_VSA6","SlogP_VSA7","SlogP_VSA8","SlogP_VSA9","VSA_EState1","VSA_EState10","VSA_EState2","VSA_EState3","VSA_EState4","VSA_EState5","VSA_EState6","VSA_EState7","VSA_EState8","VSA_EState9"]
+            elif lft == "Toxicophores":
+                columns += ["Tox_1","Tox_2","Tox_3","Tox_4","Tox_5","Tox_6","Tox_7","Tox_8","Tox_9","Tox_10","Tox_11","Tox_12","Tox_13","Tox_14","Tox_15","Tox_16","Tox_17","Tox_18","Tox_19","Tox_20","Tox_21","Tox_22","Tox_23","Tox_24","Tox_25","Tox_26","Tox_27","Tox_28","Tox_29","Tox_30","Tox_31","Tox_32","Tox_33","Tox_34","Tox_35","Tox_36"]
+            elif lft == "Fragments":
+                columns += ["fr_Al_COO","fr_Al_OH","fr_Al_OH_noTert","fr_ArN","fr_Ar_COO","fr_Ar_N","fr_Ar_NH","fr_Ar_OH","fr_COO","fr_COO2","fr_C_O","fr_C_O_noCOO","fr_C_S","fr_HOCCN","fr_Imine","fr_NH0","fr_NH1","fr_NH2","fr_N_O","fr_Ndealkylation1","fr_Ndealkylation2","fr_Nhpyrrole","fr_SH","fr_aldehyde","fr_alkyl_carbamate","fr_alkyl_halide","fr_allylic_oxid","fr_amide","fr_amidine","fr_aniline","fr_aryl_methyl","fr_azide","fr_azo","fr_barbitur","fr_benzene","fr_benzodiazepine","fr_bicyclic","fr_diazo","fr_dihydropyridine","fr_epoxide","fr_ester","fr_ether","fr_furan","fr_guanido","fr_halogen","fr_hdrzine","fr_hdrzone","fr_imidazole","fr_imide","fr_isocyan","fr_isothiocyan","fr_ketone","fr_ketone_Topliss","fr_lactam","fr_lactone","fr_methoxy","fr_morpholine","fr_nitrile","fr_nitro","fr_nitro_arom","fr_nitro_arom_nonortho","fr_nitroso","fr_oxazole","fr_oxime","fr_para_hydroxylation","fr_phenol","fr_phenol_noOrthoHbond","fr_phos_acid","fr_phos_ester","fr_piperdine","fr_piperzine","fr_priamide","fr_prisulfonamd","fr_pyridine","fr_quatN","fr_sulfide","fr_sulfonamd","fr_sulfone","fr_term_acetylene","fr_tetrazole","fr_thiazole","fr_thiocyan","fr_thiophene","fr_unbrch_alkane","fr_urea"]
+            elif lft == "Graph_based_Signatures":
+                columns += ["Acceptor:Acceptor-6.00","Acceptor:Aromatic-6.00","Acceptor:Donor-6.00","Acceptor:Hydrophobe-6.00","Acceptor:NegIonizable-6.00","Acceptor:PosIonizable-6.00","Aromatic:Aromatic-6.00","Aromatic:Donor-6.00","Aromatic:Hydrophobe-6.00","Aromatic:NegIonizable-6.00","Aromatic:PosIonizable-6.00","Donor:Donor-6.00","Donor:Hydrophobe-6.00","Donor:NegIonizable-6.00","Donor:PosIonizable-6.00","Hydrophobe:Hydrophobe-6.00","Hydrophobe:NegIonizable-6.00","Hydrophobe:PosIonizable-6.00","NegIonizable:NegIonizable-6.00","NegIonizable:PosIonizable-6.00","PosIonizable:PosIonizable-6.00","Acceptor:Acceptor-4.00","Acceptor:Aromatic-4.00","Acceptor:Donor-4.00","Acceptor:Hydrophobe-4.00","Acceptor:NegIonizable-4.00","Acceptor:PosIonizable-4.00","Aromatic:Aromatic-4.00","Aromatic:Donor-4.00","Aromatic:Hydrophobe-4.00","Aromatic:NegIonizable-4.00","Aromatic:PosIonizable-4.00","Donor:Donor-4.00","Donor:Hydrophobe-4.00","Donor:NegIonizable-4.00","Donor:PosIonizable-4.00","Hydrophobe:Hydrophobe-4.00","Hydrophobe:NegIonizable-4.00","Hydrophobe:PosIonizable-4.00","NegIonizable:NegIonizable-4.00","NegIonizable:PosIonizable-4.00","PosIonizable:PosIonizable-4.00","Acceptor:Acceptor-2.00","Acceptor:Aromatic-2.00","Acceptor:Donor-2.00","Acceptor:Hydrophobe-2.00","Acceptor:NegIonizable-2.00","Acceptor:PosIonizable-2.00","Aromatic:Aromatic-2.00","Aromatic:Donor-2.00","Aromatic:Hydrophobe-2.00","Aromatic:NegIonizable-2.00","Aromatic:PosIonizable-2.00","Donor:Donor-2.00","Donor:Hydrophobe-2.00","Donor:NegIonizable-2.00","Donor:PosIonizable-2.00","Hydrophobe:Hydrophobe-2.00","Hydrophobe:NegIonizable-2.00","Hydrophobe:PosIonizable-2.00","NegIonizable:NegIonizable-2.00","NegIonizable:PosIonizable-2.00","PosIonizable:PosIonizable-2.00"]
+            
+        mod_training_dataset_df = None
+        mod_testing_dataset_df = None
+        try:
+            cp_training_dataset_df = training_dataset_df.copy(deep=True)
+            mod_training_dataset_df = cp_training_dataset_df[columns]
+
+            if(testing):
+                cp_testing_dataset_df = testing_dataset_df.copy(deep=True)
+                mod_testing_dataset_df = cp_testing_dataset_df[columns]                
+                
+        except:
+            print("Error representation. ")
+    
+        if(testing):
+            return mod_training_dataset_df, mod_testing_dataset_df
+        else:
+            return mod_training_dataset_df   
+
+
+
+    def evaluate_train_test(self, pipeline):
+        """
+        Evaluates the pipeline on training and testing, performing each step of the ML pipeline.
+        """  
+        
+        start_time = time.time()
+
+        #all the steps in Auto-ADMET pipeline:
+        pipeline_string = self.grammar.parse_tree_to_string(pipeline)
+        pipeline_list = pipeline_string.split(" # ")
+        representation = pipeline_list[0].split(" ")
+        feature_scaling = pipeline_list[1].split(" ")
+        feature_selection = pipeline_list[2].split(" ")
+        ml_algorithm = pipeline_list[3].split(" ")
+
+        #applying the steps to an actual dataset:
+        training_dataset_df = pd.read_csv(self.training_dir, header=0, sep=",")
+        training_label_col = training_dataset_df["CLASS"]
+        training_dataset_df = training_dataset_df.drop("CLASS", axis=1)
+        training_dataset_df = training_dataset_df.drop("ID", axis=1)
+        training_dataset_df_cols = training_dataset_df.columns
+        
+        testing_dataset_df = pd.read_csv(self.testing_dir, header=0, sep=",")
+        testing_label_col = testing_dataset_df["CLASS"]
+        testing_dataset_df = testing_dataset_df.drop("CLASS", axis=1)
+        testing_dataset_df = testing_dataset_df.drop("ID", axis=1)
+        testing_dataset_df = testing_dataset_df[training_dataset_df_cols]
 
         
-    try:
-        clf = XGBClassifier(n_estimators=int(n_estimators_str), max_depth=max_depth_actual, random_state=42, 
-                            max_leaves=int(max_leaves_str), learning_rate=float(learning_rate_str), n_jobs=1)        
-
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
         
 
-        return score   
-        
-    except:
-        return 0.0  
-
-def GradientBoostingEvalulation_train_test(training_dataset, testing_dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, loss_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-
-        
-    try:
-        clf = GradientBoostingClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, random_state=42, 
-                                     min_samples_split=int(min_samples_split_str), 
-                                     min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual, loss=loss_str)        
-
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
-        
-
-        return score   
-        
-    except:
-        return 0.0   
-
-def ExtraTreesEvalulation_train_test(training_dataset, testing_dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
+        rep_training_dataset_df, rep_testing_dataset_df = self.represent_molecules(representation, training_dataset_df, testing_dataset_df, True)
+        prep_training_dataset_df, prep_testing_dataset_df = self.scale_features(feature_scaling, rep_training_dataset_df, rep_testing_dataset_df, True)
+        sel_training_dataset_df, sel_testing_dataset_df = self.select_features(feature_selection, prep_training_dataset_df, training_label_col, testing_dataset_df, True)
  
         
-    try:
-        clf = ExtraTreesClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, n_jobs=1, random_state=42, 
-                                     class_weight=class_weight_actual,  min_samples_split=int(min_samples_split_str), 
-                                     min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual)        
+        try:
+            
+            ml_algorithm  = self.select_ml_algorithms(ml_algorithm)
+            ml_model = ml_algorithm.fit(sel_training_dataset_df, training_label_col)
+            predictions = ml_model.predict(sel_testing_dataset_df)
+            probabilities = ml_model.predict_proba(sel_testing_dataset_df)[:, 1]
+            actuals = np.array(testing_label_col)
+            
+            mcc_test = round(matthews_corrcoef(actuals, predictions), 4)
+            auc_test = round(roc_auc_score(actuals, probabilities), 4)
+            rec_test = round(recall_score(actuals, predictions), 4)
+            apr_test = round(average_precision_score(actuals, predictions), 4)
+            prec_test = round(precision_score(actuals, predictions), 4)
+            acc_test = round(accuracy_score(actuals, predictions), 4)
+            return mcc_test, auc_test, rec_test, apr_test, prec_test, acc_test        
+        except Exception as e:
+            return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+            #print(e)
 
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
+    
+    def evaluate_fitness(self, pipeline, dataset_path, time_budget_minutes_alg_eval):
+        """
+        evaluates pipeline with the fitness, performing each step of the ML pipeline.
+        """  
         
+        start_time = time.time()
 
-        return score   
-        
-    except:
-        return 0.0  
+        #all the steps in Auto-ADMET pipeline:
+        pipeline_string = self.grammar.parse_tree_to_string(pipeline)
+        pipeline_list = pipeline_string.split(" # ")
+        representation = pipeline_list[0].split(" ")
+        feature_scaling = pipeline_list[1].split(" ")
+        feature_selection = pipeline_list[2].split(" ")
+        ml_algorithm = pipeline_list[3].split(" ")
 
-
-def RandomForestEvalulation_train_test(training_dataset, testing_dataset, n_estimators_str, criterion_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                            max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
- 
-        
-    try:
-        clf = RandomForestClassifier(n_estimators=int(n_estimators_str), criterion=criterion_str, max_depth=max_depth_actual, n_jobs=1, random_state=42, 
-                                     class_weight=class_weight_actual,  min_samples_split=int(min_samples_split_str), 
-                                     min_samples_leaf=int(min_samples_split_str), max_features=max_features_actual)        
-
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
-        
-
-        return score   
-        
-    except Exception as e:
-        print(e)
-        return 0.0  
-
-
-def ExtraTreeEvalulation_train_test(training_dataset, testing_dataset, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                           max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
-        
-    try:
-        clf = ExtraTreeClassifier(criterion=criterion_str, splitter='best', max_depth=max_depth_actual, 
-                                     min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str),                                      
-                                     max_features=max_features_actual, random_state=0)      
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
-        
-
-        return score   
-        
-    except:
-        return 0.0  
-
-def DecisionTreeEvalulation_train_test(training_dataset, testing_dataset, criterion_str, splitter_str, max_depth_str, min_samples_split_str, min_samples_leaf_str,
-                           max_features_str, class_weight_str):
-    max_depth_actual = None
-    if max_depth_str != "None":
-        max_depth_actual = int(max_depth_str)
-
-    max_features_actual = None
-    if max_features_str != "None":
-        max_features_actual = max_features_str  
-
-    class_weight_actual = None
-    if class_weight_str != "None":
-        class_weight_actual = class_weight_str   
-        
-    try:
-        clf = DecisionTreeClassifier(criterion=criterion_str, splitter=splitter_str, max_depth=max_depth_actual, 
-                                     min_samples_split=int(min_samples_split_str), min_samples_leaf=int(min_samples_split_str), 
-                                     max_features=max_features_actual, random_state=0,
-                                     class_weight=class_weight_actual)      
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
-        
-
-        return score   
-        
-    except:
-        return 0.0  
-
-
-def AdaBoostEvaluation_train_test(training_dataset, testing_dataset, alg, n_est, lr):
-    try:
-        clf = AdaBoostClassifier(n_estimators=n_est, learning_rate=lr, algorithm=alg, random_state=0)      
-
-        y_train =training_dataset.iloc[:,-1:]
-        X_train = training_dataset[training_dataset.columns[:-1]]
-
-        y_test =testing_dataset.iloc[:,-1:]
-        X_test = testing_dataset[testing_dataset.columns[:-1]]  
-
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-
-        score = matthews_corrcoef(np.array(y_test), predictions)
-        
-
-        return score   
-        
-    except:
-        return 0.0 
-
-def evaluate_pipeline(ml_algorithm, sel_dataset_df):
-    if ml_algorithm[0] == "AdaBoostClassifier":
-        return AdaBoostEvaluation(sel_dataset_df, str(ml_algorithm[1]), int(ml_algorithm[2]), float(ml_algorithm[3]))
-    elif ml_algorithm[0] == "DecisionTreeClassifier":
-        return DecisionTreeEvalulation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])    
-    elif ml_algorithm[0] == "ExtraTreeClassifier":
-        return ExtraTreeEvalulation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "RandomForestClassifier":
-        return RandomForestEvalulation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "ExtraTreesClassifier":
-        return ExtraTreesEvalulation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "GradientBoostingClassifier":
-        return GradientBoostingEvalulation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7]) 
-    elif ml_algorithm[0] == "XGBClassifier":
-        return XGBEvaluation(sel_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])         
-                        
-    else:
-        return -1.7889854 
-
-def evaluate_pipeline_train_test(ml_algorithm, sel_training_dataset_df, sel_testing_dataset_df):
-    if ml_algorithm[0] == "AdaBoostClassifier":
-        return AdaBoostEvaluation_train_test(sel_training_dataset_df, sel_testing_dataset_df, str(ml_algorithm[1]), int(ml_algorithm[2]), float(ml_algorithm[3]))
-    elif ml_algorithm[0] == "DecisionTreeClassifier":
-        return DecisionTreeEvalulation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])    
-    elif ml_algorithm[0] == "ExtraTreeClassifier":
-        return ExtraTreeEvalulation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "RandomForestClassifier":
-        return RandomForestEvalulation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "ExtraTreesClassifier":
-        return ExtraTreesEvalulation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
-    elif ml_algorithm[0] == "GradientBoostingClassifier":
-        return GradientBoostingEvalulation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7]) 
-    elif ml_algorithm[0] == "XGBClassifier":
-        return XGBEvaluation_train_test(sel_training_dataset_df, sel_testing_dataset_df, ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])         
-                        
-    else:
-        return -1.7889854
-
-def fitness_function(pipeline, dataset_path, resample, generation):
-    try:
-
-        list_hp = pipeline.split("#")
-
-        representation = list_hp[0].split("$")
-        feature_scaling = list_hp[1].split("$")
-        feature_selection = list_hp[2].split("$")
-        ml_algorithm  =  list_hp[3].split("$")    
-        
-        dataset_df = pd.read_csv(dataset_path, header=0, sep=",")
-        dataset_df = dataset_df.sample(random_state=generation, frac = 1.0)
-
+        #applying the steps to an actual dataset:
+        dataset_df = pd.read_csv(self.training_dir, header=0, sep=",")
         label_col = dataset_df["CLASS"]
         dataset_df = dataset_df.drop("CLASS", axis=1)
+        dataset_df = dataset_df.drop("ID", axis=1)
 
-        dataset_df = represent(representation, dataset_df)       
-        prep_dataset_df = scale(feature_scaling, dataset_df)
-        sel_dataset_df = select(feature_selection, prep_dataset_df, label_col)
-        sel_dataset_df["CLASS"] = pd.Series(label_col)
-        score = evaluate_pipeline(ml_algorithm, sel_dataset_df)
-    
-        return score
-    except:
-        return -1.0 
+        rep_dataset_df = self.represent_molecules(representation, dataset_df)
+        if(rep_dataset_df is None):
+            return 0.0
+     
+        prep_dataset_df = self.scale_features(feature_scaling, rep_dataset_df)
+        if(prep_dataset_df is None):
+            return 0.0
+            
+        sel_dataset_df = self.select_features(feature_selection, prep_dataset_df, label_col)        
+        if(sel_dataset_df is None):
+            return 0.0
 
-# Example fitness function (replace with your own)
-def fitness_function_train_test(pipeline, training_dataset, testing_dataset):
-    try:
-
-        list_hp = pipeline.split("#")
-
-        representation = list_hp[0].split("$")
-        feature_scaling = list_hp[1].split("$")
-        feature_selection = list_hp[2].split("$")
-        ml_algorithm  =  list_hp[3].split("$")    
+        ml_algorithm  = self.select_ml_algorithms(ml_algorithm)
+        sel_dataset_df["CLASS"] = pd.Series(label_col)        
         
-        training_df = pd.read_csv(training_dataset, header=0, sep=",")
-        training_label_col = training_df["CLASS"]
-        training_df = training_df.drop("CLASS", axis=1)
+        try:
+            y = sel_dataset_df.iloc[:,-1:]
+            X = sel_dataset_df[sel_dataset_df.columns[:-1]]
+            scores = None
+            
+            if(self.fitness_metric == "auc"):                
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(roc_auc_score))
+            elif(self.fitness_metric == "mcc"):            
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
+            elif(self.fitness_metric == "recall"):
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(recall_score))
+            elif(self.fitness_metric == "precision"):
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(precision_score))
+            elif(self.fitness_metric == "auprc"):
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(average_precision_score))
+            elif(self.fitness_metric == "accuracy"):
+                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(accuracy_score))                
+                
+            fitness_value = scores.mean()
+        except Exception as e:
+            #print(e)
+            fitness_value = 0.00            
 
-        testing_df = pd.read_csv(testing_dataset, header=0, sep=",")
-        testing_label_col = testing_df["CLASS"]
-        testing_df = testing_df.drop("CLASS", axis=1)        
+        # This function should evaluate the fitness of the individual within the time budget        
+        elapsed_time = time.time() - start_time    
+        if elapsed_time > (time_budget_minutes_alg_eval * 60):  # Check if elapsed time exceeds time budget
+            fitness_value = fitness_value * 0.7  # Set fitness value to zero if time budget exceeded
+       
+            
+        return fitness_value
 
-        mod_training_df, mod_testing_df = represent_train_test(representation, training_df, testing_df)       
-        prep_training_df, prep_testing_df = scale_train_test(feature_scaling, mod_training_df, mod_testing_df)
-        sel_training_df, sel_testing_df = select_train_test(feature_selection, prep_training_df, training_label_col, prep_testing_df)
-        sel_training_df["CLASS"] = pd.Series(training_label_col)
-        sel_testing_df["CLASS"] = pd.Series(testing_label_col)
-        score = evaluate_pipeline_train_test(ml_algorithm, sel_training_df, sel_testing_df)
     
-        return score
-    except Exception as e:
-        print(e)
-        return -1.0   
-
-def evaluate_fitness(pipeline, dataset_path, time_budget_minutes_alg_eval, resample, generation):
-    start_time = time.time()
-    
-    score = fitness_function(pipeline, dataset_path, resample, generation)
-    # This function should evaluate the fitness of the individual within the time budget
-    fitness_value = score 
-    
-    elapsed_time = time.time() - start_time    
-    if elapsed_time > (time_budget_minutes_alg_eval * 60):  # Check if elapsed time exceeds time budget
-        fitness_value = 0.0  # Set fitness value to zero if time budget exceeded
         
-        
-    return fitness_value
-
-def evaluate_population_parallel(population, dataset_path, time_budget_minutes_alg_eval, num_cores, resample, generation):
-    with multiprocessing.Pool(processes=num_cores) as pool:
-        results = []
-        for pipeline in population:
-            result = pool.apply_async(evaluate_fitness, (pipeline, dataset_path, time_budget_minutes_alg_eval, resample, generation))
-            try:
-                fitness_value = result.get(timeout=time_budget_minutes_alg_eval * 60)
+    def fitness(self):
+        """
+        Calculates the fitness function in parallel using multiprocessing,
+        while caching results to avoid redundant evaluations.
+        """
+        with multiprocessing.Pool(processes=self.num_cores) as pool:
+            results = []
+            async_results = []
+            
+            # Submit all tasks asynchronously, checking cache first
+            for pipeline in self.population:
+                pipeline_str =self.grammar.parse_tree_to_string(pipeline)  # Convert individual to a string representation
+                
+                if pipeline_str in self.fitness_cache:
+                    # Use cached value if available
+                    results.append((pipeline, self.fitness_cache[pipeline_str]))
+                else:
+                    # Otherwise, evaluate it asynchronously
+                    async_result = pool.apply_async(
+                        self.evaluate_fitness, 
+                        (pipeline, self.training_dir, self.time_budget_minutes_alg_eval)
+                    )
+                    async_results.append((pipeline, async_result))
+    
+            # Collect results in a non-blocking way
+            for pipeline, async_result in async_results:
+                try:
+                    fitness_value = async_result.get(timeout=self.time_budget_minutes_alg_eval * 60)
+                except multiprocessing.TimeoutError:
+                    fitness_value = 0.0  # Timeout case
+                
+                # Cache the computed fitness value
+                pipeline_str =self.grammar.parse_tree_to_string(pipeline)
+               
+                self.fitness_cache[pipeline_str] = fitness_value  # Store in dictionary
                 results.append((pipeline, fitness_value))
-            except multiprocessing.TimeoutError:
-                results.append((pipeline, 0.0))  # Set fitness value to zero and elapsed time to the time budget
-
-    fitness_results = []
-    pipelines = []
-    for result in results:
-        individual, fitness_value = result[0], result[1]
-        pipelines.append(individual)
-        fitness_results.append(fitness_value)
-
-    return pipelines, fitness_results
-
-
-if __name__ == '__main__':
-    timestr = time.strftime("%Y%m%d_%H%M%S")
-    parser = argparse.ArgumentParser(description="AutoML for PK Prediction")
-    parser.add_argument("training_dir", help="Choose input CSV(comma-separated values) format file")
-    parser.add_argument("testing_dir", help="Choose input CSV(comma-separated values) format file")
-    parser.add_argument("output_dir", help="Choose output CSV(comma-separated values) format file")
-    parser.add_argument("-pop_size", help="Population size", default=30, type=int)
-    parser.add_argument("-xover_rate", help="Crossover rate", default=0.90, type=float)
-    parser.add_argument("-mut_rate", help="Mutaion rate", default=0.10, type=float)
-    parser.add_argument("-time_budget_min", help="AutoML time budget (in min)", default=60, type=int)
-    parser.add_argument("-time_budget_minutes_alg_eval", help="Algorithm/pipeline time budget (in min)", default=5, type=int)   
-    parser.add_argument("-seed", help="Choose the pseudo-random seed to serve as input to the models", default=42, type=int)
-    parser.add_argument("-num_cores", help="Choose the pseudo-random seed to serve as input to the models", default=1, type=int)
-
-    args = parser.parse_args()
-
-    grammar = {
-        "<Start>": [["<feature_definition>", "#", "<feature_scaling>", "#", "<feature_selection>", "#", "<algorithms>"]],
-        "<feature_definition>": [["General_Descriptors"], 
-                                 ["Advanced_Descriptors"],
-                             ["Graph_based_Signatures"],
-                                 ["Toxicophores"],
-                                 ["Fragments"],
-                                 ["General_Descriptors", "$", "Advanced_Descriptors"],
-                                 ["General_Descriptors", "$","Graph_based_Signatures"],
-                                 ["General_Descriptors", "$","Toxicophores"],
-                                 ["General_Descriptors", "$","Fragments"],
-                                 ["Advanced_Descriptors", "$","Graph_based_Signatures"],
-                                 ["Advanced_Descriptors", "$","Toxicophores"],
-                                 ["Advanced_Descriptors", "$","Fragments"],
-                                 ["Graph_based_Signatures", "$","Toxicophores"],
-                                 ["Graph_based_Signatures", "$","Fragments"],
-                                 ["Toxicophores", "$","Fragments"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Graph_based_Signatures"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Toxicophores"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Fragments"],
-                                 ["General_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores"],
-                                 ["General_Descriptors", "$","Graph_based_Signatures", "$","Fragments"],
-                                 ["General_Descriptors", "$","Toxicophores", "$","Fragments"],
-                                 ["Advanced_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores"],
-                                 ["Advanced_Descriptors", "$","Graph_based_Signatures", "$","Fragments"],
-                                 ["Advanced_Descriptors", "$","Toxicophores", "$","Fragments"],
-                                 ["Graph_based_Signatures", "$","Toxicophores", "$","Fragments"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Graph_based_Signatures", "$","Fragments"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Toxicophores", "$","Fragments"],
-                                 ["General_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores", "$","Fragments"],
-                                 ["Advanced_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores", "$","Fragments"],
-                                 ["General_Descriptors", "$","Advanced_Descriptors", "$","Graph_based_Signatures", "$","Toxicophores", "$","Fragments"]],
         
-        "<feature_scaling>": [["<None>"], ["Normalizer", "$", "<norm>"], ["MinMaxScaler"], ["MaxAbsScaler"], ["RobustScaler", "$", "<boolean>", "$", "<boolean>"], ["StandardScaler", "$", "<boolean>", "$", "<boolean>"]],
-        "<feature_selection>": [["<None>"], ["VarianceThreshold", "$", "<threshold>"], ["SelectPercentile", "$",  "<percentile>",  "$",  "<score_function>"],
-                               ["SelectFpr", "$", "<value_rand_1>", "$", "<score_function>"], ["SelectFwe", "$", "<value_rand_1>", "$", "<score_function>"],
-                                ["SelectFdr", "$", "<value_rand_1>", "$", "<score_function>"]],
-                               
-        "<algorithms>": [["AdaBoostClassifier", "$", "<algorithm_ada>", "$", "<n_estimators>", "$", "<learning_rate_ada>"],
-                         ["DecisionTreeClassifier", "$", "<criterion>", "$", "<splitter>", "$", "<max_depth>", "$", "<min_samples_split>", "$", "<min_samples_leaf>", "$", "<max_features>", "$", "<class_weight>"],
-                         ["ExtraTreeClassifier", "$", "<criterion>", "$", "<splitter>", "$", "<max_depth>", "$", "<min_samples_split>", "$", "<min_samples_leaf>", "$", "$", "<max_features>", "$", "$", "<class_weight>"],
-                         ["RandomForestClassifier","$", "<n_estimators>", "$", "<criterion>", "$", "<max_depth>", "$", "<min_samples_split>", "$", "<min_samples_leaf>", "$", "<max_features>", "$", "<class_weight_rf>"],
-                         ["ExtraTreesClassifier","$", "<n_estimators>", "$", "<criterion>", "$", "<max_depth>", "$", "<min_samples_split>", "$", "<min_samples_leaf>", "$", "<max_features>", "$", "<class_weight_rf>"],
-                         ["GradientBoostingClassifier","$", "<n_estimators>", "$", "<criterion_gb>", "$", "<max_depth>", "$", "<min_samples_split>", "$", "<min_samples_leaf>", "$", "<max_features>", "$", "<loss>"],
-                         ["XGBClassifier", "$", "<n_estimators>", "$", "<max_depth>", "$", "<max_leaves>", "$", "<learning_rate_ada>"]
-                        
-                        ],
-                    
-        "<None>": [["None"]],
-        "<norm>": [["l1"], ["l2"], ["max"]],
-        "<threshold>": [["0.0"],["0.05"],["0.10"],["0.15"],["0.20"],["0.25"],["0.30"],["0.35"],["0.40"],["0.45"],["0.50"],
-                        ["0.55"],["0.60"],["0.65"],["0.70"],["0.75"],["0.80"],["0.85"],["0.90"],["0.95"],["1.0"]],
-        "<algorithm_ada>": [["SAMME.R"], ["SAMME"]],   
-        "<n_estimators>": [["5"],["10"],["15"],["20"],["25"],["30"],["35"],["40"],["45"],["50"],["100"], ["150"], ["200"], ["250"], ["300"]],
-        "<learning_rate_ada>": [["0.01"],["0.05"],["0.10"],["0.15"],["0.20"],["0.25"],["0.30"],["0.35"],["0.40"],["0.45"],
-                                ["0.50"],["0.55"],["0.60"],["0.65"],["0.70"],["0.75"],["0.80"],["0.85"],["0.90"],["0.95"],["1.0"],
-                                ["1.05"],["1.10"],["1.15"],["1.20"],["1.25"],["1.30"],["1.35"],["1.40"],["1.45"],["1.50"],
-                                ["1.55"],["1.60"],["1.65"],["1.70"],["1.75"],["1.80"],["1.85"],["1.90"],["1.95"],["2.0"]],
-        "<boolean>": [["True"], ["False"]],
-        "<percentile>": [["5"],["10"],["15"],["20"],["25"],["30"],["35"],["40"],["45"],["50"],["55"],["60"],["65"],["70"],["75"],["80"],["85"],["90"],["95"]],
-        "<score_function>": [["f_classif"], ["chi2"]],
-        "<value_rand_1>": [["0.0"],["0.05"],["0.10"],["0.15"],["0.20"],["0.25"],["0.30"],["0.35"],["0.40"],["0.45"],["0.50"],["0.55"],["0.60"],["0.65"],["0.70"],["0.75"],["0.80"],["0.85"],["0.90"],["0.95"],["1.0"]],
-        
-        "<criterion>": [["gini"], ["entropy"], ["log_loss"]],
-        "<splitter>": [["best"], ["random"]],
-        "<max_depth>": [["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"], ["None"]],
-        "<min_samples_split>": [["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"], ["11"], ["12"], ["13"], ["14"], ["15"], ["16"], ["17"], ["18"], ["19"], ["20"]],
-        "<min_samples_leaf>": [["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"], ["11"], ["12"], ["13"], ["14"], ["15"], ["16"], ["17"], ["18"], ["19"], ["20"]],
-        "<max_features>": [["None"], ["log2"], ["sqrt"]],
-        "<class_weight>": [["balanced"], ["None"]],
-        "<class_weight_rf>": [["balanced"], ["balanced_subsample"], ["None"]],
-        "<criterion_gb>": [["friedman_mse"], ["squared_error"]],
-        "<loss>": [["log_loss"], ["exponential"]],
-        "<max_leaves>": [["0"], ["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"]]
-    }
+        # Separate pipelines and fitness values
+        pipelines, fitness_results = zip(*results) if results else ([], [])
+    
+        return list(pipelines), list(fitness_results)
 
-    start_symbol = "<Start>"
-    population_size = args.pop_size
-    seed = args.seed
-    random.seed(seed)
-    seed_sampling = 1
-	
-    population = generate_population(grammar, start_symbol, population_size, seed)
-    training_set_path = args.training_dir
-    testing_set_path = args.testing_dir
-    start_time = time.time()
-    elapsed_time = 0
 
-    # Convert time budget from minutes to seconds
-    time_budget_min = args.time_budget_min
-    time_budget_seconds = time_budget_min * 60
-    time_budget_minutes_alg_eval = args.time_budget_minutes_alg_eval
-    num_cores = args.num_cores
+    
+    def crossover(self, parent1, parent2):
+        """
+        Performs crossover by swapping compatible components between parents.
+        """
+        if isinstance(parent1, str) or isinstance(parent2, str):  # No crossover if terminal
+            return parent1, parent2
+    
+        root1, children1 = list(parent1.items())[0]
+        root2, children2 = list(parent2.items())[0]
+    
+        if root1 == "<start>" and root2 == "<start>":
+            # Swap one of the four main components of `<start>`
+            idx = random.choice([0, 2, 4, 6])  # Indices of the main components
+            children1[idx], children2[idx] = children2[idx], children1[idx]
+        elif root1 == root2:
+            # Swap subtrees for other non-terminals
+            idx1 = random.randint(0, len(children1) - 1)
+            idx2 = random.randint(0, len(children2) - 1)
+            children1[idx1], children2[idx2] = children2[idx2], children1[idx1]
+    
+        return parent1, parent2
 
-    generation = 0
-    resample = False
-    while elapsed_time < time_budget_seconds:
-        print("Generation", generation)
-
-        population = evolve(population, grammar, start_symbol, args.mut_rate, args.xover_rate, training_set_path, time_budget_minutes_alg_eval, num_cores, resample, seed_sampling, seed)
-        elapsed_time = time.time() - start_time
-        generation += 1
-        if generation % 5 == 0:
-        	resample = True
-        	seed_sampling += seed_sampling
+    
+    def mutate(self, individual, max_mutation_depth=4):
+        """
+        Mutates an individual by replacing a specific component with a new valid subtree.
+        """
+        if isinstance(individual, str):  # Terminal, no mutation possible
+            return individual
+    
+        root, children = list(individual.items())[0]
+    
+        if root == "<start>":
+            # Mutate one of the four main components of `<start>`
+            idx = random.choice([0, 2, 4, 6])  # Indices of the main components
+            components = ["<feature_definition>", "<feature_scaling>", "<feature_selection>", "<ml_algorithms>"]
+            replacement = self.grammar.generate_parse_tree(components[idx // 2], max_depth=max_mutation_depth)
+            children[idx] = replacement
         else:
-        	resample = False	    
+            # Mutate other non-terminals
+            idx = random.randint(0, len(children) - 1)
+            children[idx] = self.grammar.generate_parse_tree(root, max_depth=max_mutation_depth)
+    
+        return individual
+    
+    
+    def evolve(self):
+        """
+        Runs the genetic programming algorithm.
+        """
+        # Initialize population
+        self.population = [self.grammar.generate_parse_tree() for _ in range(self.population_size)]
+        pop_indices = []  
+        
+        generation = 0
+        start = datetime.now()
+        end = start
+        time_diff_minutes = (end - start).total_seconds() / 60
+        condition = ""
+        if(self.stopping_criterion == "generations"):
+            condition = generation < self.max_generations
+        elif(self.stopping_criterion == "time"):
+            condition = time_diff_minutes < (self.max_time - 0.5)
 
-    best_pipeline = max(population, key=lambda pipeline: fitness_function(pipeline, training_set_path, False, generation))
-    best_fitness_5CV = fitness_function(best_pipeline, training_set_path, False, generation)
-    best_fitness_test = fitness_function_train_test(best_pipeline, training_set_path, testing_set_path)
-    end_time = time.time()    
+        #seed_index = 1
+        #random.seed(seed_index)
+        while condition:   
+            print("GENERATION: " + str(generation))
+            if(self.stopping_criterion == "generations"):
+                condition = generation < self.max_generations
+            elif(self.stopping_criterion == "time"):
+                condition = time_diff_minutes < (self.max_time - 0.5)            
+            
+            #condition = generation < self.max_generations
+            # Evaluate fitness
+            pop_fitness_scores = self.fitness()
+            evaluated_population = pop_fitness_scores[0]
+            self.population = deepcopy(evaluated_population)
+            fitness_scores = pop_fitness_scores[1]
 
-    file = open(args.output_dir, "a")
-    file.write("seed,elapsed_time,generation,best_pipeline,result_cv,result_test\n")
-    file.write(str(seed) + "," + str(elapsed_time) + "," + str(generation) + "," + str(best_pipeline) + "," + str(best_fitness_5CV) + "," + str(best_fitness_test) + "\n")
-    file.close()
+            pop_indices = sorted(range(len(self.population)), key=lambda i: fitness_scores[i], reverse=True)
+            elites = [self.population[i] for i in pop_indices[:self.elitism_size]] 
+            # Elitism: retain the best individuals
+            new_population = []
+            new_population.extend(elites)
+
+            #Adding new individuals if the population has >80% of the individuals are the same
+            ind_count_pop = {}            
+            for i in pop_indices:
+                ind = self.grammar.parse_tree_to_string(self.population[i])
+                print(ind + "--->" + str(fitness_scores[i]))
+                if(ind not in ind_count_pop):
+                    ind_count_pop[ind] = 1
+                else:
+                    count = ind_count_pop[ind] + 1
+                    ind_count_pop[ind] = count
+
+            max_count = -1
+            for ind in ind_count_pop:
+                ind_count = ind_count_pop[ind]
+                if  ind_count > max_count:
+                    max_count = ind_count
+
+            population_stabilisation_rate = float(max_count)/float(self.population_size)
+            
+            if(population_stabilisation_rate > 0.7):
+                print(population_stabilisation_rate)
+                new_ind1 = self.grammar.generate_parse_tree()
+                new_ind2 = self.grammar.generate_parse_tree()
+                new_population.append(new_ind1)
+                new_population.append(new_ind2)
+
+
+
+            # Selection probabilities
+            fitness_values = [1.0 / (f + 1e-6) for f in fitness_scores]
+            total_fitness = sum(fitness_values)
+            probabilities = [f / total_fitness for f in fitness_values]
+
+            #for p in new_population:
+            #    print("new pop" + self.grammar.parse_tree_to_string(p))
+
+            while len(new_population) < self.population_size:
+                
+                idx1 = random.randint(0, len(self.population) - 1)
+                idx2 = random.randint(0, len(self.population) - 1)
+                while idx1 == idx2:
+                    idx2 = random.randint(0, len(self.population) - 1)
+                   
+                parent1 = self.population[idx1]
+                parent2 = self.population[idx2]
+
+                random_num = random.random()
+                #print(random_num)
+                if (random_num < self.crossover_mutation_rate):                    
+                    #perform crossover                    
+                    child1, child2 = self.crossover(deepcopy(parent1), deepcopy(parent2))                    
+                    # and mutation                    
+                    child1_1 = self.mutate(deepcopy(child1))
+                    child2_1 = self.mutate(deepcopy(child2))
+                    new_population.extend([child1_1, child2_1]) 
+                elif (random_num < (self.crossover_mutation_rate + self.mutation_rate)):
+                    #only mutation
+                    child = self.mutate(deepcopy(parent1))
+                    new_population.append(child)
+                elif (random_num < (self.crossover_mutation_rate + self.mutation_rate + self.crossover_rate)):
+                    #only crossover
+                    child1, child2 = self.crossover(deepcopy(parent1), deepcopy(parent2))
+                    new_population.extend([child1, child2])     
+                else:
+                    #no operation
+                    new_population.extend([deepcopy(parent1), deepcopy(parent2)])
+                    
+            # Trim excess individuals
+            self.population = new_population[:self.population_size]
+            end =  datetime.now()
+            time_diff_minutes = (end - start).total_seconds() / 60
+            generation += 1
+            print("-----------------------------------------------")            
+
+        #print(time_diff_minutes)
+        #print(generation)
+        best_indices = sorted(range(len(self.population)), key=lambda i: fitness_scores[i], reverse=True)[:1]
+        best_fitness = [fitness_scores[i] for i in pop_indices][0]  
+        best_individual = self.population[best_indices[0]]
+        mcc, auc, rec, apr, prec, acc = self.evaluate_train_test(best_individual)
+        
+        final_file_name = self.experiment_name + ".txt"
+        final_result = ""
+        with open(final_file_name, "a") as file:
+            final_result += self.experiment_name + ";"
+            final_result += str(self.seed) + ";"
+            final_result += str(generation) + ";"
+            final_result += str(round(time_diff_minutes, 4)) + ";"
+            final_result += str(mcc) + ";"
+            final_result += str(auc) + ";"
+            final_result += str(rec) + ";"
+            final_result += str(apr) + ";"
+            final_result += str(prec) + ";"
+            final_result += str(acc) + ";" + ";"
+            final_result += self.grammar.parse_tree_to_string(best_individual) + "\n"
+            print(final_result)
+            file.write(final_result)
+            file.close()
+
+
+
+# Example Usage
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="A simple argument parser example")
+
+    # Add arguments
+    parser.add_argument("training_dir", type=str, help="Directory to the training dataset.")
+    parser.add_argument("testing_dir", type=str, help="Directory to the training dataset.")
+    parser.add_argument("grammar_dir", type=str, help="Directory to the grammar.")
+    parser.add_argument("-s", "--seed", type=int, help="The seed", default=1) 
+    parser.add_argument("-m", "--metric", type=str, help="The metric to be used during Auto-ADMET optimisation procedure", default="auc")
+    parser.add_argument("-e", "--exp_name", type=str, help="The name of the experiment", default="Exp_ADMET")
+    parser.add_argument("-t", "--time", type=int, help="Time in minutes to run the method", default=60)
+    
+    # Parse arguments
+    args = parser.parse_args()
+    training_dir = args.training_dir
+    testing_dir = args.training_dir
+    grammar_dir = args.grammar_dir
+    seed = args.seed
+    metric = args.metric
+    exp_name = args.exp_name
+    
+    random.seed(seed)  # For reproducibility
+
+    # Define grammar
+    with open(grammar_dir, "r") as file:
+        grammar_text = file.read()
+
+    # Load grammar
+    grammar = BNFGrammar()
+    grammar.load_grammar(grammar_text)
+
+    # Run GGP
+    ggp = GrammarBasedGP(grammar, training_dir, testing_dir, fitness_metric=metric, experiment_name=exp_name)
+    best_program = ggp.evolve()
