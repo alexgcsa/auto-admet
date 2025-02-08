@@ -1,1 +1,2 @@
-expABC;0;178;5.9975;0.1948;0.9135;0.0667;0.4846;1.0;0.5821;;Advanced_Descriptors Graph_based_Signatures Fragments # StandardScaler False True # SelectFwe 0.75 f_classif # GradientBoostingClassifier 55 squared_error 12 17 1 log2 log_loss
+expABC;0;4;0.0228;0.1647;0.7005;0.3333;0.4946;0.5882;0.597;;Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
+expABC;0;4;0.0761;0.0;0.7072;0.0;0.4478;0.0;0.5522;;General_Descriptors Advanced_Descriptors # RobustScaler True True # NoFeatureSelection # NeuroNets 250 tanh adam adaptive 2000 0.02
