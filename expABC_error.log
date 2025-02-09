@@ -1,333 +1,136 @@
-Error on calculation scores - fitting
-General_Descriptors Graph_based_Signatures Fragments # NoScaling # NoFeatureSelection # NeuroNet 1 identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons> tanh lbfgs adaptive 250 0.07
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # MaxAbsScaler # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons>#<n_neurons>#<n_neurons> identity sgd constant 3500 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # MinMaxScaler # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons>#<n_neurons> identity adam invscaling 3500 0.08
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons> identity sgd constant 1000 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # MinMaxScaler # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons>#<n_neurons> identity adam invscaling 3500 0.08
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons> identity sgd constant 1000 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # MinMaxScaler # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons> identity sgd constant 1000 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons>#<n_neurons> identity adam invscaling 3500 0.08
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet <n_neurons>#<n_neurons> identity sgd constant 1000 0.06
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNet 1 # identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNet 5 # 25 # 5 # logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNet 1 # identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNet 5 # 25 # 5 # logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNet 1 # identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNet 5 # 25 # 5 # logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.60000
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNet 1 # identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNet 5 # 25 # 5 # logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNet 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNet 2 # relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNets 1 # identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNets 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 # 25 # 5 # logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNets 750 # 250 # identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNets 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 2 # relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 10 # 500 # relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 # relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNets 1 identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 25 5 logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - select_fpr
+Input X must be non-negative.
 
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
-
-Error on calculation scores - fitting
-Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNets 1 identity adam adaptive 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 25 5 logistic sgd invscaling 10 0.06
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - select_percentile
+Input X must be non-negative.
 
-Error on calculation scores - fitting
-Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
-The 'estimator' parameter of cross_val_score must be an object implementing 'fit'. Got None instead.
+Error on feature selection - select_fwe
+Input X must be non-negative.
 
-Error on pipeline - fitting
-Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 2 relu lbfgs invscaling 1000 0.09
-'NoneType' object has no attribute 'fit'
+Error on feature selection - variance_threshold
+ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
 
 Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 25 5 logistic sgd invscaling 10 0.06
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
+    return self._fit(X, y, incremental=False)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
+    if np.any(np.array(hidden_layer_sizes) <= 0):
+numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.65000
+
+Error on calculation scores - fitting
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
+    return self._fit(X, y, incremental=False)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
+    if np.any(np.array(hidden_layer_sizes) <= 0):
+numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on calculation scores - fitting
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
+    return self._fit(X, y, incremental=False)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
+    if np.any(np.array(hidden_layer_sizes) <= 0):
+numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator SVC should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
+
+Error on feature selection - select_fwe
+Input X must be non-negative.
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.65000
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.60000
+
+Error on calculation scores - fitting
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -341,15 +144,15 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -363,15 +166,67 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 25 5 logistic sgd invscaling 10 0.06
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
+    return self._fit(X, y, incremental=False)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
+    if np.any(np.array(hidden_layer_sizes) <= 0):
+numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator SVC should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.65000
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on feature selection - select_fwe
+Input X must be non-negative.
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.60000
+
+Error on calculation scores - fitting
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -385,15 +240,15 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -407,15 +262,67 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
+    return self._fit(X, y, incremental=False)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
+    if np.any(np.array(hidden_layer_sizes) <= 0):
+numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator SVC should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
+
+Error on feature selection - select_fwe
+Input X must be non-negative.
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.65000
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on feature selection - variance_threshold
+ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.60000
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.80000
+
+Error on calculation scores - fitting
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -429,15 +336,15 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -451,15 +358,15 @@ numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a l
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # SelectPercentile 30 f_classif # NeuroNets 750 100 100 identity sgd invscaling 1500 0.09
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
@@ -470,247 +377,146 @@ Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
     if np.any(np.array(hidden_layer_sizes) <= 0):
 numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+
+
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator SVC should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.35000
+
+Error on feature selection - select_fdr
+Input X must be non-negative.
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - select_percentile
+Input X must be non-negative.
+
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.55000
+
+Error on calculation scores - fitting
+General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # NoScaling # SelectFpr 0.0 f_classif # SVM rbf 9 0.04 750 None
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/svm/_base.py", line 190, in fit
+    X, y = self._validate_data(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 650, in _validate_data
+    X, y = check_X_y(X, y, **check_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1263, in check_X_y
+    X = check_array(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 879, in check_array
+    dtype_orig = np.result_type(*dtypes_orig)
+ValueError: at least one array or dtype is required
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler True False # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # NoScaling # SelectFpr 0.0 f_classif # SVM rbf 9 0.04 750 None
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
     return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/svm/_base.py", line 190, in fit
+    X, y = self._validate_data(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 650, in _validate_data
+    X, y = check_X_y(X, y, **check_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1263, in check_X_y
+    X = check_array(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 879, in check_array
+    dtype_orig = np.result_type(*dtypes_orig)
+ValueError: at least one array or dtype is required
 
 
 Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
+General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # NoScaling # SelectFpr 0.0 f_classif # SVM rbf 9 0.04 750 None
 
-All the 5 fits failed.
+All the 3 fits failed.
 It is very likely that your model is misconfigured.
 You can try to debug the error by setting error_score='raise'.
 
 Below are more details about the failures:
 --------------------------------------------------------------------------------
-5 fits failed with the following error:
+3 fits failed with the following error:
 Traceback (most recent call last):
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
     estimator.fit(X_train, y_train, **fit_params)
   File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
     return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/svm/_base.py", line 190, in fit
+    X, y = self._validate_data(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 650, in _validate_data
+    X, y = check_X_y(X, y, **check_params)
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 1263, in check_X_y
+    X = check_array(
+  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/utils/validation.py", line 879, in check_array
+    dtype_orig = np.result_type(*dtypes_orig)
+ValueError: at least one array or dtype is required
 
 
-Error on calculation scores - fitting
-Advanced_Descriptors Graph_based_Signatures Toxicophores # Normalizer max # NoFeatureSelection # NeuroNets 5 25 5 logistic sgd invscaling 10 0.06
+Error on feature selection - select_fpr
+Input X must be non-negative.
 
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
+Error on feature selection - select_percentile
+Input X must be non-negative.
 
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+Error on feature selection - select_fdr
+Input X must be non-negative.
 
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator MLPClassifier should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # Normalizer l2 # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+Error on feature selection - select_percentile
+Input X must be non-negative.
 
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
+Error on feature selection - variance_threshold
+ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
 
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+Error on feature selection - select_percentile
+Input X must be non-negative.
 
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.40000
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures # RobustScaler True False # NoFeatureSelection # NeuroNets 750 250 identity lbfgs adaptive 1000 0.05
+Error on feature selection - select_fdr
+Input X must be non-negative.
 
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
+Error on feature selection - select_percentile
+Input X must be non-negative.
 
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 0.85000
 
+Error on feature selection - variance_threshold
+No feature in X meets the variance threshold 1.00000
 
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments # RobustScaler False True # NoFeatureSelection # NeuroNets 10 500 relu adam invscaling 2500 0.0000000001
+Error on feature selection - select_fpr
+Input X must be non-negative.
 
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
+Error on feature selection - select_fpr
+Input X must be non-negative.
 
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # NoScaling # NoFeatureSelection # NeuroNets 500 5 identity adam adaptive 100 0.06
-
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
-
-Error on calculation scores - fitting
-General_Descriptors Fragments # MaxAbsScaler # NoFeatureSelection # NeuroNets 1000 250 1000 relu sgd adaptive 250 0.05
-
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
-
-Error on calculation scores - fitting
-General_Descriptors Graph_based_Signatures Toxicophores Fragments # MaxAbsScaler # NoFeatureSelection # NeuroNets 3 50 relu adam adaptive 250 0.07
-
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
-
-Error on calculation scores - fitting
-General_Descriptors Toxicophores Fragments # MaxAbsScaler # NoFeatureSelection # NeuroNets 1000 250 1000 relu sgd adaptive 250 0.05
-
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
-
-Error on calculation scores - fitting
-General_Descriptors Advanced_Descriptors # RobustScaler True True # NoFeatureSelection # NeuroNets 1000 250 1000 relu sgd adaptive 250 0.05
-
-All the 5 fits failed.
-It is very likely that your model is misconfigured.
-You can try to debug the error by setting error_score='raise'.
-
-Below are more details about the failures:
---------------------------------------------------------------------------------
-5 fits failed with the following error:
-Traceback (most recent call last):
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/model_selection/_validation.py", line 895, in _fit_and_score
-    estimator.fit(X_train, y_train, **fit_params)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/base.py", line 1474, in wrapper
-    return fit_method(estimator, *args, **kwargs)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 752, in fit
-    return self._fit(X, y, incremental=False)
-  File "/home/alexgcsa/anaconda3/envs/autoadmet/lib/python3.10/site-packages/sklearn/neural_network/_multilayer_perceptron.py", line 434, in _fit
-    if np.any(np.array(hidden_layer_sizes) <= 0):
-numpy.core._exceptions._UFuncNoLoopError: ufunc 'less_equal' did not contain a loop with signature matching types (<class 'numpy.dtypes.StrDType'>, <class 'numpy.dtypes.Int64DType'>) -> <class 'numpy.dtypes.BoolDType'>
-
+Error on feature selection - variance_threshold
+when `importance_getter=='auto'`, the underlying estimator SVC should have `coef_` or `feature_importances_` attribute. Either pass a fitted estimator to feature selector or call fit before calling transform.
 

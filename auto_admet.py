@@ -6,16 +6,19 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import Normalizer, MaxAbsScaler, MinMaxScaler, RobustScaler, StandardScaler
-from sklearn.feature_selection import VarianceThreshold, SelectPercentile, SelectFpr, SelectFwe, SelectFdr, chi2, f_classif
+from sklearn.feature_selection import VarianceThreshold, SelectPercentile, SelectFpr, SelectFwe, SelectFdr, chi2, f_classif, RFE
 import warnings
 from sklearn.ensemble import ExtraTreesClassifier, AdaBoostClassifier, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
+from sklearn.svm import SVC, NuSVC
+from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 warnings.filterwarnings("ignore")
 from sklearn.metrics import make_scorer, matthews_corrcoef, roc_auc_score, recall_score, average_precision_score, precision_score, accuracy_score
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, StratifiedKFold
 from datetime import datetime
 import argparse
+import fcntl
 
 class BNFGrammar:
     def __init__(self):
@@ -230,14 +233,91 @@ class MLAlgorithmTransformer:
         clf = AdaBoostClassifier(n_estimators=n_est, learning_rate=lr, algorithm=alg, random_state=0)
         return clf
 
+    def SVM(self, kernel, degree, tol, max_iter, class_weight):
+  
+        #<class_weight> ::= balanced | None 
+        actual_class_weight = None
+        if(class_weight == "balanced"):
+            actual_class_weight = "balanced"
+            
+        clf = SVC(kernel=str(kernel), degree=int(degree), probability=True, tol=float(tol), class_weight=actual_class_weight, max_iter=int(max_iter), random_state=0)
+       
+        return clf
+
+    def NuSVM(self, kernel, degree, tol, max_iter, class_weight):
+  
+        #<class_weight> ::= balanced | None 
+        actual_class_weight = None
+        if(class_weight == "balanced"):
+            actual_class_weight = "balanced"
+            
+        clf = NuSVC(kernel=str(kernel), degree=int(degree), probability=True, tol=float(tol), class_weight=actual_class_weight, max_iter=int(max_iter), random_state=0)
+       
+        return clf
+
+
+    def NeuroNets(self, ml_algorithm_options):
+        if(len(ml_algorithm_options)==6):
+            hls = (int(ml_algorithm_options[0]),)
+            af = ml_algorithm_options[1]
+            sol = ml_algorithm_options[2]
+            lr = ml_algorithm_options[3]
+            mi = int(ml_algorithm_options[4])
+            t = float(ml_algorithm_options[5])
+        elif(len(ml_algorithm_options)==7):
+            hls = (int(ml_algorithm_options[0]), ml_algorithm_options[1])
+            af = ml_algorithm_options[2]
+            sol = ml_algorithm_options[3]
+            lr = ml_algorithm_options[4]
+            mi = int(ml_algorithm_options[5])
+            t = float(ml_algorithm_options[6])            
+        elif(len(ml_algorithm_options)==8):
+            hls = (int(ml_algorithm_options[0]), ml_algorithm_options[1], ml_algorithm_options[2])
+            af = ml_algorithm_options[3]
+            sol = ml_algorithm_options[4]
+            lr = ml_algorithm_options[5]
+            mi = int(ml_algorithm_options[6])
+            t = float(ml_algorithm_options[7]) 
+        
+        clf = MLPClassifier(hidden_layer_sizes=hls, activation=af, solver=sol, learning_rate=lr, 
+                          max_iter=mi, random_state=0, tol=t, early_stopping=True)
+
+        return clf
 
 
 class FeatureSelectionTransformer:
-    def __init__(self, training_df, testing_df, training_label_col):
+    def __init__(self, training_df, testing_df, training_label_col, error_log):
         self.training_df = training_df
         self.testing_df = testing_df
-        self.model = None
         self.training_label_col = training_label_col
+        self.error_log = error_log
+        self.model = None   
+
+    def select_ml_algorithms(self, ml_algorithm):
+        ml_alg_selection = MLAlgorithmTransformer()
+        if ml_algorithm[0] == "AdaBoostClassifier":
+            return ml_alg_selection.AdaBoost(str(ml_algorithm[1]), int(ml_algorithm[2]), float(ml_algorithm[3]))
+        elif ml_algorithm[0] == "DecisionTreeClassifier":
+            return ml_alg_selection.DecisionTree(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])    
+        elif ml_algorithm[0] == "ExtraTreeClassifier":
+            return ml_alg_selection.ExtraTree(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "RandomForestClassifier":
+            return ml_alg_selection.RandomForest(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "ExtraTreesClassifier":
+            return ml_alg_selection.ExtraTrees(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7])         
+        elif ml_algorithm[0] == "GradientBoostingClassifier":
+            return ml_alg_selection.GradientBoosting(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7]) 
+        elif ml_algorithm[0] == "XGBClassifier":
+            return ml_alg_selection.XGBoost(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])         
+        elif ml_algorithm[0] == "SVM":
+            return ml_alg_selection.SVM(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5]) 
+        elif ml_algorithm[0] == "NuSVM":
+            return ml_alg_selection.SVM(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5])             
+        elif ml_algorithm[0] == "NeuroNets":
+            return ml_alg_selection.NeuroNets(ml_algorithm[1:])             
+                                              
+        else:
+            return None        
 
     def select_fwe(self, alpha_str, score_function_str):
     
@@ -255,7 +335,11 @@ class FeatureSelectionTransformer:
         
             return features_df_new
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - select_fwe" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file         
             return None 
             
     
@@ -275,61 +359,86 @@ class FeatureSelectionTransformer:
         
             return features_df_new
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - select_fdr" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file        
             return None
             
     
-    def select_fpr(self, alpha_str, score_function_str):
-    
-        score_function_actual = f_classif
-    
+    def select_fpr(self, alpha_str, score_function_str):    
+        score_function_actual = f_classif    
         if(score_function_str == "chi2"):
-            score_function_actual = chi2       
+            score_function_actual = chi2      
         
         try:
-            self.model = SelectFpr(score_func=score_function_actual, alpha = float(alpha_str)).fit(self.training_df, self.training_label_col)
-            #df_np = self.model.transform(self.training_df)
-        
+            self.model = SelectFpr(score_func=score_function_actual, alpha = float(alpha_str)).fit(self.training_df, self.training_label_col)      
             cols_idxs = self.model.get_support(indices=True)
             features_df_new = self.training_df.iloc[:,cols_idxs]
         
             return features_df_new
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - select_fpr" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file           
             return None
             
     
     def select_percentile(self, percentile_str, score_function_str):
-        score_function_actual = f_classif
-    
+        score_function_actual = f_classif    
         if(score_function_str == "chi2"):
             score_function_actual = chi2       
-        
+            
         try:
-            self.model = SelectPercentile(score_func=score_function_actual, percentile = int(percentile_str)).fit(self.training_df, self.training_label_col)
-            #df_np = self.model.transform(self.training_df)
-        
+            self.model = SelectPercentile(score_func=score_function_actual, percentile = int(percentile_str)).fit(self.training_df, self.training_label_col)       
             cols_idxs = self.model.get_support(indices=True)
             features_df_new = self.training_df.iloc[:,cols_idxs]
         
             return features_df_new
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - select_percentile" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file           
             return None
             
     
     def variance_threshold(self,thrsh):
         try:
-            self.model =VarianceThreshold(threshold=thrsh).fit(self.training_df, training_label_col)
-            #df_np = model.transform(self.training_df)
+            self.model =VarianceThreshold(threshold=thrsh).fit(self.training_df, self.training_label_col)      
+            cols_idxs = self.model.get_support(indices=True)
+            features_df_new = self.training_df.iloc[:,cols_idxs]
         
+            return features_df_new
+        except Exception as e:            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - variance_threshold" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
+            return None
+
+    def select_rfe(self, n_features_to_select_rfe, step_rfe, ml_algorithm):
+        try:
+            
+            estimator = self.select_ml_algorithms(ml_algorithm) 
+            self.model = RFE(estimator, n_features_to_select=float(n_features_to_select_rfe), step=float(step_rfe)).fit(self.training_df, self.training_label_col)      
+                           
             cols_idxs = self.model.get_support(indices=True)
             features_df_new = self.training_df.iloc[:,cols_idxs]
         
             return features_df_new
         except Exception as e:
-            #print(e)
-            return None
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - variance_threshold" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
+            return None    
 
     def apply_model(self):
         try:
@@ -339,16 +448,20 @@ class FeatureSelectionTransformer:
             df_np_testing = pd.DataFrame(self.model.transform(self.testing_df), columns=features_df_new_testing.columns)
             return features_df_new_testing
         except Exception as e:
-            #print("ERROR")
-            print(e)
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature selection - apply model" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
             return None
         
 
 
 class ScalingTransformer:
-    def __init__(self, training_df, testing_df):
+    def __init__(self, training_df, testing_df, error_log):
         self.training_df = training_df
         self.testing_df = testing_df
+        self.error_log = error_log
         self.model = None
 
     def normalizer(self, norm_hp):
@@ -358,7 +471,11 @@ class ScalingTransformer:
     
             return pd.DataFrame(df_np, columns = self.training_df.columns)
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - scaling normalizer" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file           
             return None
 
     
@@ -369,7 +486,11 @@ class ScalingTransformer:
     
             return pd.DataFrame(df_np, columns = self.training_df.columns)
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - max_abs_scaler" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file            
             return None
 
     
@@ -380,7 +501,11 @@ class ScalingTransformer:
     
             return pd.DataFrame(df_np, columns = self.training_df.columns)
         except Exception as e:
-            #print(e)            
+            with open(self.error_log, "a") as f:
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - min_max_scaler" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file         
             return None 
 
     
@@ -394,11 +519,14 @@ class ScalingTransformer:
             with_std_actual = False        
         try:
             self.model = StandardScaler(with_mean=with_mean_actual, with_std=with_std_actual).fit(self.training_df)
-            df_np = self.model.transform(self.training_df)
-    
+            df_np = self.model.transform(self.training_df)    
             return pd.DataFrame(df_np, columns = self.training_df.columns)
         except Exception as e:
-            #print(e)
+            with open(self.error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - standard_scaler" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file
             return None
 
     
@@ -415,7 +543,12 @@ class ScalingTransformer:
             df_np = self.model.transform(self.training_df)
     
             return pd.DataFrame(df_np, columns = self.training_df.columns)
-        except Exception as e:            
+        except Exception as e:
+            with open(self.error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - robust_scaler" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file            
             return None
 
     def apply_model(self):
@@ -423,15 +556,19 @@ class ScalingTransformer:
             df_np_testing = pd.DataFrame(self.model.transform(self.testing_df), columns = self.testing_df.columns)
             return df_np_testing
         except Exception as e:
-            
-            print(e)
+            with open(self.error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature scaling - apply model" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
             return None
         
 
 
 class GrammarBasedGP:
-    def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 5, population_size=100, 
-                 max_generations=100, max_time=60, mutation_rate=0.15, crossover_rate=0.8, crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="auc", 
+    def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 3, 
+                 population_size=20, max_generations=3, max_time=5, mutation_rate=0.15, crossover_rate=0.8, 
+                 crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="auc", 
                  experiment_name = "expABC", stopping_criterion = "time", seed=0):
         self.grammar = grammar
         self.training_dir = training_dir
@@ -449,10 +586,10 @@ class GrammarBasedGP:
         self.fitness_metric = fitness_metric
         self.experiment_name = experiment_name
         self.stopping_criterion = stopping_criterion
-        self.seed = seed
+        self.seed = seed        
         self.population = []
 
-    def select_ml_algorithms(self, ml_algorithm):
+    def select_ml_algorithms(self, ml_algorithm):        
         ml_alg_selection = MLAlgorithmTransformer()
         if ml_algorithm[0] == "AdaBoostClassifier":
             return ml_alg_selection.AdaBoost(str(ml_algorithm[1]), int(ml_algorithm[2]), float(ml_algorithm[3]))
@@ -467,13 +604,19 @@ class GrammarBasedGP:
         elif ml_algorithm[0] == "GradientBoostingClassifier":
             return ml_alg_selection.GradientBoosting(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5], ml_algorithm[6], ml_algorithm[7]) 
         elif ml_algorithm[0] == "XGBClassifier":
-            return ml_alg_selection.XGBoost(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])         
-                            
+            return ml_alg_selection.XGBoost(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4])  
+        elif ml_algorithm[0] == "SVM":
+            return ml_alg_selection.SVM(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5])             
+        elif ml_algorithm[0] == "NuSVM":
+            return ml_alg_selection.NuSVM(ml_algorithm[1], ml_algorithm[2], ml_algorithm[3], ml_algorithm[4], ml_algorithm[5])             
+        elif ml_algorithm[0] == "NeuroNets":
+            return ml_alg_selection.NeuroNets(ml_algorithm[1:])             
+                                                                  
         else:
             return None    
 
     
-    def select_features(self, feature_selection, training_dataset_df, training_label_col, testing_dataset_df=None, testing=False):
+    def select_features(self, feature_selection, ml_algorithm, training_dataset_df, training_label_col, testing_dataset_df=None, testing=False):
 
         cp_training_dataset_df = training_dataset_df.copy(deep=True)
         cp_testing_datset_df = None        
@@ -481,7 +624,8 @@ class GrammarBasedGP:
             cp_testing_datset_df = testing_dataset_df.copy(deep=True)
 
         cp_training_label_col = training_label_col.copy(deep=True)
-        feature_selection_transformer = FeatureSelectionTransformer(cp_training_dataset_df, cp_testing_datset_df, cp_training_label_col)
+        error_log = self.experiment_name + "_error.log"
+        feature_selection_transformer = FeatureSelectionTransformer(cp_training_dataset_df, cp_testing_datset_df, cp_training_label_col, error_log)
         mod_training_dataset_df = None
         mod_testing_dataset_df = None        
         if feature_selection[0] == "NoFeatureSelection":
@@ -524,7 +668,14 @@ class GrammarBasedGP:
                 mod_testing_dataset_df = feature_selection_transformer.apply_model()
                 return mod_training_dataset_df, mod_testing_dataset_df
             else:
-                return mod_training_dataset_df           
+                return mod_training_dataset_df  
+        elif feature_selection[0] == "SelectRFE":        
+            mod_training_dataset_df = feature_selection_transformer.select_rfe(feature_selection[1], feature_selection[2], ml_algorithm)    
+            if(testing):
+                mod_testing_dataset_df = feature_selection_transformer.apply_model()               
+                return mod_training_dataset_df, mod_testing_dataset_df
+            else:
+                return mod_training_dataset_df                  
         else:
             return None       
 
@@ -535,8 +686,8 @@ class GrammarBasedGP:
         cp_testing_datset_df = None
         if(testing):
             cp_testing_datset_df = testing_dataset_df.copy(deep=True)
-        
-        scaling_transformer = ScalingTransformer(cp_training_dataset_df, cp_testing_datset_df)
+        error_log = self.experiment_name + "_error.log"
+        scaling_transformer = ScalingTransformer(cp_training_dataset_df, cp_testing_datset_df, error_log)
         mod_training_dataset_df = None
         mod_testing_dataset_df = None
         if feature_scaling[0] == "NoScaling":
@@ -614,7 +765,12 @@ class GrammarBasedGP:
                 mod_testing_dataset_df = cp_testing_dataset_df[columns]                
                 
         except:
-            print("Error representation. ")
+            error_log = self.experiment_name + "_error.log"
+            with open(error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on feature representation" + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
     
         if(testing):
             return mod_training_dataset_df, mod_testing_dataset_df
@@ -651,13 +807,10 @@ class GrammarBasedGP:
         testing_dataset_df = testing_dataset_df.drop("ID", axis=1)
         testing_dataset_df = testing_dataset_df[training_dataset_df_cols]
 
-        
-        
-
         rep_training_dataset_df, rep_testing_dataset_df = self.represent_molecules(representation, training_dataset_df, testing_dataset_df, True)
         prep_training_dataset_df, prep_testing_dataset_df = self.scale_features(feature_scaling, rep_training_dataset_df, rep_testing_dataset_df, True)
-        sel_training_dataset_df, sel_testing_dataset_df = self.select_features(feature_selection, prep_training_dataset_df, training_label_col, testing_dataset_df, True)
- 
+        sel_training_dataset_df, sel_testing_dataset_df = self.select_features(feature_selection, ml_algorithm, prep_training_dataset_df, training_label_col, testing_dataset_df, True)
+        sel_testing_dataset_df = sel_testing_dataset_df[sel_training_dataset_df.columns]
         
         try:
             
@@ -675,9 +828,14 @@ class GrammarBasedGP:
             acc_test = round(accuracy_score(actuals, predictions), 4)
             return mcc_test, auc_test, rec_test, apr_test, prec_test, acc_test        
         except Exception as e:
+            error_log = self.experiment_name + "_error.log"
+            with open(error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on pipeline - fitting" + "\n")
+                f.write(pipeline_string + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file             
             return 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-            #print(e)
-
     
     def evaluate_fitness(self, pipeline, dataset_path, time_budget_minutes_alg_eval):
         """
@@ -708,39 +866,59 @@ class GrammarBasedGP:
         if(prep_dataset_df is None):
             return 0.0
             
-        sel_dataset_df = self.select_features(feature_selection, prep_dataset_df, label_col)        
+        sel_dataset_df = self.select_features(feature_selection, ml_algorithm, prep_dataset_df, label_col)        
         if(sel_dataset_df is None):
             return 0.0
 
         ml_algorithm  = self.select_ml_algorithms(ml_algorithm)
-        sel_dataset_df["CLASS"] = pd.Series(label_col)        
+        sel_dataset_df["CLASS"] = pd.Series(label_col)
         
-        try:
-            y = sel_dataset_df.iloc[:,-1:]
-            X = sel_dataset_df[sel_dataset_df.columns[:-1]]
-            scores = None
-            
-            if(self.fitness_metric == "auc"):                
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(roc_auc_score))
-            elif(self.fitness_metric == "mcc"):            
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(matthews_corrcoef))
-            elif(self.fitness_metric == "recall"):
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(recall_score))
-            elif(self.fitness_metric == "precision"):
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(precision_score))
-            elif(self.fitness_metric == "auprc"):
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(average_precision_score))
-            elif(self.fitness_metric == "accuracy"):
-                scores = cross_val_score(ml_algorithm, X, y, cv=5, scoring=make_scorer(accuracy_score))                
+        final_scores = []
+        trials = range(3)
+        for t in trials: 
+            current_seed = self.seed + t
+            outer_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=current_seed)
+            try:
+                y = sel_dataset_df.iloc[:,-1:]
+                X = sel_dataset_df[sel_dataset_df.columns[:-1]]
+                scores = None
                 
-            fitness_value = scores.mean()
-        except Exception as e:
-            #print(e)
-            fitness_value = 0.00            
-
+                if(self.fitness_metric == "auc"):                
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(roc_auc_score))
+                elif(self.fitness_metric == "mcc"):            
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(matthews_corrcoef))
+                elif(self.fitness_metric == "recall"):
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(recall_score))
+                elif(self.fitness_metric == "precision"):
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(precision_score))
+                elif(self.fitness_metric == "auprc"):
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(average_precision_score))
+                elif(self.fitness_metric == "accuracy"):
+                    scores = cross_val_score(ml_algorithm, X, y, cv=outer_cv, scoring=make_scorer(accuracy_score))                
+    
+                final_scores += list(scores)               
+            except Exception as e:
+                error_log = self.experiment_name + "_error.log"
+                with open(error_log, "a") as f:            
+                    fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                    f.write("Error on calculation scores - fitting" + "\n")
+                    f.write(pipeline_string + "\n")
+                    f.write(str(e) + "\n"  + "\n")
+                    fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file 
+                final_scores += [0.0, 0.0, 0.0]
+                           
+        
         # This function should evaluate the fitness of the individual within the time budget        
         elapsed_time = time.time() - start_time    
+        fitness_value = np.array(final_scores).mean()
         if elapsed_time > (time_budget_minutes_alg_eval * 60):  # Check if elapsed time exceeds time budget
+            error_log = self.experiment_name + "_error.log"
+            with open(error_log, "a") as f:            
+                fcntl.flock(f, fcntl.LOCK_EX)  # Lock the file
+                f.write("Error on pipeline - exceeded time budget" + "\n")
+                f.write(pipeline_string + "\n")
+                f.write(str(e) + "\n"  + "\n")
+                fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file              
             fitness_value = fitness_value * 0.7  # Set fitness value to zero if time budget exceeded
        
             
@@ -898,21 +1076,15 @@ class GrammarBasedGP:
             population_stabilisation_rate = float(max_count)/float(self.population_size)
             
             if(population_stabilisation_rate > 0.7):
-                print(population_stabilisation_rate)
                 new_ind1 = self.grammar.generate_parse_tree()
                 new_ind2 = self.grammar.generate_parse_tree()
                 new_population.append(new_ind1)
                 new_population.append(new_ind2)
 
-
-
             # Selection probabilities
             fitness_values = [1.0 / (f + 1e-6) for f in fitness_scores]
             total_fitness = sum(fitness_values)
             probabilities = [f / total_fitness for f in fitness_values]
-
-            #for p in new_population:
-            #    print("new pop" + self.grammar.parse_tree_to_string(p))
 
             while len(new_population) < self.population_size:
                 
@@ -925,7 +1097,6 @@ class GrammarBasedGP:
                 parent2 = self.population[idx2]
 
                 random_num = random.random()
-                #print(random_num)
                 if (random_num < self.crossover_mutation_rate):                    
                     #perform crossover                    
                     child1, child2 = self.crossover(deepcopy(parent1), deepcopy(parent2))                    
@@ -952,8 +1123,6 @@ class GrammarBasedGP:
             generation += 1
             print("-----------------------------------------------")            
 
-        #print(time_diff_minutes)
-        #print(generation)
         best_indices = sorted(range(len(self.population)), key=lambda i: fitness_scores[i], reverse=True)[:1]
         best_fitness = [fitness_scores[i] for i in pop_indices][0]  
         best_individual = self.population[best_indices[0]]
@@ -976,7 +1145,6 @@ class GrammarBasedGP:
             print(final_result)
             file.write(final_result)
             file.close()
-
 
 
 # Example Usage
