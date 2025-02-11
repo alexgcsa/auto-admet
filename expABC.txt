@@ -1,4 +1,1 @@
-expABC;0;4;1.9313;-0.0198;0.5946;0.2;0.4439;0.4286;0.5224;;Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # StandardScaler False True # SelectFpr 0.30 f_classif # NuSVM linear 5 0.08 1500 balanced
-expABC;0;4;1.9984;-0.0198;0.5946;0.2;0.4439;0.4286;0.5224;;Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # StandardScaler False True # SelectFpr 0.30 f_classif # NuSVM linear 5 0.08 1500 balanced
-expABC;0;4;1.9548;-0.0198;0.5946;0.2;0.4439;0.4286;0.5224;;Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # StandardScaler False True # SelectFpr 0.30 f_classif # NuSVM linear 5 0.08 1500 balanced
-expABC;0;4;5.1274;0.5501;0.8901;0.6333;0.6874;0.8261;0.7761;;General_Descriptors Toxicophores Fragments # NoScaling # VarianceThreshold 0.65 # RandomForestClassifier 4000 entropy None 19 3 None balanced
+expABC;0;4;1.3141;0.2404;0.8077;0.1;0.503;1.0;0.597;;General_Descriptors Advanced_Descriptors # MinMaxScaler # NoFeatureSelection # GradientBoostingClassifier 95 squared_error 6 3 15 sqrt log_loss

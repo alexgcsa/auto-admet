@@ -1,7 +1,9 @@
 <start> ::= <feature_definition> # <feature_scaling> # <feature_selection> # <ml_algorithms>
 <feature_definition> ::=  General_Descriptors | Advanced_Descriptors | Graph_based_Signatures | Toxicophores | Fragments | General_Descriptors Advanced_Descriptors | General_Descriptors Graph_based_Signatures | General_Descriptors Toxicophores | General_Descriptors Fragments | Advanced_Descriptors Graph_based_Signatures | Advanced_Descriptors Toxicophores | Advanced_Descriptors Fragments | Graph_based_Signatures Toxicophores | Graph_based_Signatures Fragments | Toxicophores Fragments | General_Descriptors Advanced_Descriptors Graph_based_Signatures | General_Descriptors Advanced_Descriptors Toxicophores | General_Descriptors Advanced_Descriptors Fragments | General_Descriptors Graph_based_Signatures Toxicophores | General_Descriptors Graph_based_Signatures Fragments | General_Descriptors Toxicophores Fragments | Advanced_Descriptors Graph_based_Signatures Toxicophores | Advanced_Descriptors Graph_based_Signatures Fragments | Advanced_Descriptors Toxicophores Fragments | Graph_based_Signatures Toxicophores Fragments | General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores | General_Descriptors Advanced_Descriptors Graph_based_Signatures Fragments | General_Descriptors Advanced_Descriptors Toxicophores Fragments | General_Descriptors Graph_based_Signatures Toxicophores Fragments | Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments | General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments
-<feature_scaling> ::= <no_scaling> | <normalizer> | MinMaxScaler | MaxAbsScaler | <robust_scaler> | <standard_scaler>
+<feature_scaling> ::= <no_scaling> | <normalizer> | <minmax_scaler> | <maxabs_scaler> | <robust_scaler> | <standard_scaler>
 <normalizer> ::= Normalizer <norm>
+<minmax_scaler> ::= MinMaxScaler
+<maxabs_scaler> ::= MaxAbsScaler
 <robust_scaler> ::= RobustScaler <boolean> <boolean>
 <standard_scaler> ::= StandardScaler <boolean> <boolean>
 <feature_selection> ::= <no_feature_selection> | <variance_threshold> | <select_percentile> | <selectfpr> | <selectfwe> | <selectfdr> | <select_rfe>
