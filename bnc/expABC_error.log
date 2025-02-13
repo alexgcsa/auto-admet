@@ -1,0 +1,81 @@
+Error on calculation scores - fitting
+Toxicophores Fragments # MinMaxScaler # SelectFwe 0.50 f_classif # AdaBoostClassifier SAMME.R 400 0.65
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/model_selection/_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 1382, in wrapper
+    estimator._validate_params()
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 436, in _validate_params
+    validate_parameter_constraints(
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/utils/_param_validation.py", line 98, in validate_parameter_constraints
+    raise InvalidParameterError(
+sklearn.utils._param_validation.InvalidParameterError: The 'algorithm' parameter of AdaBoostClassifier must be a str among {'SAMME'}. Got 'SAMME.R' instead.
+
+
+Error on calculation scores - fitting
+Toxicophores Fragments # MinMaxScaler # SelectFwe 0.50 f_classif # AdaBoostClassifier SAMME.R 400 0.65
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/model_selection/_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 1382, in wrapper
+    estimator._validate_params()
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 436, in _validate_params
+    validate_parameter_constraints(
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/utils/_param_validation.py", line 98, in validate_parameter_constraints
+    raise InvalidParameterError(
+sklearn.utils._param_validation.InvalidParameterError: The 'algorithm' parameter of AdaBoostClassifier must be a str among {'SAMME'}. Got 'SAMME.R' instead.
+
+
+Error on calculation scores - fitting
+Toxicophores Fragments # MinMaxScaler # SelectFwe 0.50 f_classif # AdaBoostClassifier SAMME.R 400 0.65
+
+All the 3 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+3 fits failed with the following error:
+Traceback (most recent call last):
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/model_selection/_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 1382, in wrapper
+    estimator._validate_params()
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/base.py", line 436, in _validate_params
+    validate_parameter_constraints(
+  File "/home/alexgcsa/anaconda3/envs/bnc/lib/python3.12/site-packages/sklearn/utils/_param_validation.py", line 98, in validate_parameter_constraints
+    raise InvalidParameterError(
+sklearn.utils._param_validation.InvalidParameterError: The 'algorithm' parameter of AdaBoostClassifier must be a str among {'SAMME'}. Got 'SAMME.R' instead.
+
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+
+Error on feature selection - select_fdr
+Input X must be non-negative.
+
+Error on feature selection - select_fpr
+Input X must be non-negative.
+

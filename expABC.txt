@@ -1,0 +1,3 @@
+expABC;0;6;1.6909;0.0;0.5;0.0;0.4478;0.0;0.5522;;General_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFpr 0.75 chi2 # NuSVM rbf 5 0.09 1500 None
+expABC;0;6;1.6775;0.0;0.5;0.0;0.4478;0.0;0.5522;;General_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFpr 0.75 chi2 # NuSVM rbf 5 0.09 1500 None
+expABC;0;6;1.6156;0.0;0.5;0.0;0.4478;0.0;0.5522;;General_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFpr 0.75 chi2 # NuSVM rbf 5 0.09 1500 None

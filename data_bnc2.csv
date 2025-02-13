@@ -1,0 +1,13 @@
+General_Descriptors,Advanced_Descriptors,Graph_based_Signatures,Toxicophores,Fragments,normalizer,minmax_scaler,maxabs_scaler,robust_scaler,standard_scaler,no_scaling,variance_threshold,select_percentile,selectfpr,selectfwe,selectfdr,select_rfe,no_feature_selection,neural_networks,adaboost,decision_tree,extra_tree,random_rorest,extra_trees,gradient_boosting,xgboost,svm,nu_svm,main_building_blocks,class,performance
+0,1,0,1,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,Advanced_Descriptors Toxicophores Fragments # MinMaxScaler # SelectFdr # NuSVM,1,0.5408295389893617
+1,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,General_Descriptors Graph_based_Signatures Toxicophores # NoScaling # VarianceThreshold # ExtraTreeClassifier,1,0.5007353056593735
+0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,Fragments # RobustScaler # SelectFpr # RandomForestClassifier,1,0.4942792873034381
+0,0,0,1,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,Toxicophores Fragments # MinMaxScaler # SelectFwe # AdaBoostClassifier,1,0.4940938802315271
+0,0,1,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,Graph_based_Signatures Fragments # StandardScaler # SelectFpr # RandomForestClassifier,1,0.4900997322197774
+1,0,1,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,General_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr # NuSVM,1,0.5947589731109875
+0,1,0,1,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,Advanced_Descriptors Toxicophores Fragments # MinMaxScaler # SelectFdr # RandomForestClassifier,1,0.5528841311241943
+0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,Fragments # RobustScaler # SelectFpr # NuSVM,1,0.5155645890652872
+0,1,0,1,1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,Advanced_Descriptors Toxicophores Fragments # NoScaling # VarianceThreshold # ExtraTreeClassifier,1,0.47652512786465856
+0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,Fragments # NoScaling # SelectFpr # NuSVM,1,0.535796174734053
+0,1,0,1,1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,Advanced_Descriptors Toxicophores Fragments # RobustScaler # VarianceThreshold # ExtraTreeClassifier,1,0.5128494530673815
+0,1,0,1,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,Advanced_Descriptors Toxicophores Fragments # RobustScaler # SelectFpr # NuSVM,0,0.0
