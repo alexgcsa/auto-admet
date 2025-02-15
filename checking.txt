@@ -1,0 +1,67 @@
+        
+        if(count_aux > 1000):
+            while count < max_sampling:
+                test_representation = False
+                test_scaling = False
+                test_feature_selection = False
+                test_ml_algorithm = False
+                
+                trial = self.grammar.generate_parse_tree()
+                trial_str = self.grammar.parse_tree_to_string(trial)
+                
+                trial_list = trial_str.split(" # ")            
+                trial_rep = trial_list[0].split(" ")
+                trial_scaling = trial_list[1].split(" ")[0]
+                trial_feat_selection = trial_list[2].split(" ")[0]
+                trial_ml_algorithm = trial_list[3].split(" ")[0]
+                #print(trial_rep, trial_scaling, trial_feat_selection, trial_ml_algorithm)
+                
+                if feature_definitions_mb:
+                    for r in trial_rep:
+                        if r in feature_definitions_mb:
+                            test_representation = True
+                else:
+                    test_representation = True
+    
+                #print(feature_definitions_mb)
+                #print(trial_rep)
+                #print(test_representation)
+                #print(".")
+    
+                
+                if scalings_mb:
+                    if trial_scaling in scalings_mb:
+                        test_scaling = True               
+                else:
+                    test_scaling = True
+    
+                #print(scalings_mb)
+                #print(trial_scaling)
+                #print(test_scaling)
+                #print("..")
+    
+                if feature_selections_mb:
+                    if trial_feat_selection in feature_selections_mb:
+                        test_feature_selection = True               
+                else:
+                    test_feature_selection = True
+    
+                #print(feature_selections_mb)
+                #print(trial_feat_selection)
+                #print(test_feature_selection)
+                #print("...")
+                
+                if ml_algorithms_mb:
+                    if trial_ml_algorithm in ml_algorithms_mb:
+                        test_ml_algorithm = True               
+                else:
+                    test_ml_algorithm = True                  
+    
+                #print(ml_algorithms_mb)
+                #print(trial_ml_algorithm)
+                #print(test_ml_algorithm)
+                #print("....")
+                
+                if test_representation or test_scaling or test_feature_selection or test_ml_algorithm:
+                    count += 1
+                    sampled_pipelines.append(trial)  

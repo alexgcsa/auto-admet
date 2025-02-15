@@ -1,0 +1,19 @@
+General_Descriptors,Advanced_Descriptors,Graph_based_Signatures,Toxicophores,Fragments,normalizer,minmax_scaler,maxabs_scaler,robust_scaler,standard_scaler,no_scaling,variance_threshold,select_percentile,selectfpr,selectfwe,selectfdr,select_rfe,no_feature_selection,neural_networks,adaboost,decision_tree,extra_tree,random_rorest,extra_trees,gradient_boosting,xgboost,svm,nu_svm,main_building_blocks,class,performance
+1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures # MinMaxScaler # SelectFdr # XGBClassifier,1,0.6009540975699761
+0,1,1,1,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,Advanced_Descriptors Graph_based_Signatures Toxicophores Fragments # StandardScaler # SelectFpr # XGBClassifier,1,0.5374320378192706
+0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,Toxicophores # StandardScaler # SelectRFE # DecisionTreeClassifier,0,0.04717377878497517
+0,0,1,1,1,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,Graph_based_Signatures Toxicophores Fragments # MinMaxScaler # SelectPercentile # XGBClassifier,1,0.5289442945855028
+0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,Toxicophores # Normalizer # SelectRFE # DecisionTreeClassifier,0,0.05205236937040145
+0,1,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,Advanced_Descriptors Graph_based_Signatures # MaxAbsScaler # VarianceThreshold # RandomForestClassifier,0,0.0
+0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,Fragments # Normalizer # SelectFdr # XGBClassifier,1,0.48920327808057784
+0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,Toxicophores # Normalizer # SelectRFE # XGBClassifier,0,0.019189027587862336
+1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,General_Descriptors # MinMaxScaler # SelectFwe # RandomForestClassifier,1,0.5359875850802782
+0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,Toxicophores # MinMaxScaler # SelectRFE # XGBClassifier,0,0.003812640078654093
+1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures # MinMaxScaler # SelectFdr # AdaBoostClassifier,0,0.0
+1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # VarianceThreshold # NuSVM,0,0.07886533122894429
+1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr # AdaBoostClassifier,0,0.0
+1,1,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures # MinMaxScaler # SelectPercentile # AdaBoostClassifier,0,0.0
+1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # NoScaling # VarianceThreshold # XGBClassifier,1,0.6052317270197496
+1,0,1,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,General_Descriptors Graph_based_Signatures Toxicophores # RobustScaler # SelectRFE # NeuroNets,0,0.0
+0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,Toxicophores # MinMaxScaler # SelectRFE # NuSVM,0,0.0
+1,1,1,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectPercentile # AdaBoostClassifier,0,0.0
