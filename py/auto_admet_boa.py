@@ -1,4 +1,5 @@
 import random
+import math
 from collections import defaultdict
 from copy import deepcopy
 import time
@@ -19,6 +20,15 @@ from sklearn.model_selection import cross_val_score, StratifiedKFold
 from datetime import datetime
 import argparse
 import fcntl
+import os
+from pyAgrum.skbn import BNClassifier
+import pyAgrum.skbn._MBCalcul as mbcalcul
+import pandas as pd
+import pyAgrum as gum
+import pyAgrum.lib.notebook as gnb
+
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 class BNFGrammar:
     def __init__(self):
@@ -566,11 +576,10 @@ class ScalingTransformer:
 
 
 class GrammarBasedGP:
-    
     def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 5, 
                  population_size=100, max_generations=100, max_time=60, mutation_rate=0.15, crossover_rate=0.8, 
                  crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="mcc", 
-                 experiment_name = "expABC", stopping_criterion = "time", seed=0):   
+                 experiment_name = "expABC", stopping_criterion = "time", seed=0):
         self.grammar = grammar
         self.training_dir = training_dir
         self.testing_dir = testing_dir
@@ -922,8 +931,10 @@ class GrammarBasedGP:
                 fcntl.flock(f, fcntl.LOCK_UN)  # Unlock the file              
             fitness_value = fitness_value * 0.7  # Set fitness value to zero if time budget exceeded
        
-            
-        return fitness_value
+        if math.isnan(fitness_value):    
+            return 0.0
+        else:
+            return fitness_value
 
     
         
@@ -1015,8 +1026,211 @@ class GrammarBasedGP:
             children[idx] = self.grammar.generate_parse_tree(root, max_depth=max_mutation_depth)
     
         return individual
+
+    def convert_pipeline_to_df(self, pipeline, pipeline_string):
+        """
+        Transforms a single AutoML pipeline into a binary vector indicating the presence (1) 
+        or absence (0) of a feature definition, scaler, selection method, or ML algorithm.
+        """        
+        pipeline_list = pipeline_string.split(" # ")
+        main_buling_blocks = ""
+        main_buling_blocks += pipeline_list[0] + " # "
+        main_buling_blocks += pipeline_list[1].split(" ")[0] + " # "
+        main_buling_blocks += pipeline_list[2].split(" ")[0] + " # "
+        main_buling_blocks += pipeline_list[3].split(" ")[0]
+        
+        # Define all possible feature definition, scaling, selection, and ML algorithm options
+        feature_definition_columns = [
+            "General_Descriptors", "Advanced_Descriptors", "Graph_based_Signatures", "Toxicophores", "Fragments"
+        ]
+        
+        scaling_columns = ["normalizer", "minmax_scaler", "maxabs_scaler","robust_scaler", "standard_scaler", "no_scaling"]
+        selection_columns = [
+            "variance_threshold", "select_percentile", "selectfpr", "selectfwe", "selectfdr", "select_rfe", "no_feature_selection"
+        ]
+        ml_algorithm_columns = [
+            "neural_networks", "adaboost", "decision_tree", "extra_tree", "random_rorest",
+            "extra_trees", "gradient_boosting", "xgboost", "svm", "nu_svm"
+        ]
+        
+        # Combine all columns into a single list for the DataFrame
+        all_columns = feature_definition_columns + scaling_columns + selection_columns + ml_algorithm_columns  
+
+        row = {col: 0 for col in all_columns}  # Initialize all columns with 0
     
+        for section in pipeline["<start>"]:
+            if isinstance(section, dict):
+                for key, value in section.items():
+                    col_name = key.replace("<", "").replace(">", "")  # Normalize column names
     
+                    # Check and set feature definitions
+                    if col_name == "feature_definition":
+                        for feature in value:
+                            if feature in feature_definition_columns:
+                                row[feature] = 1
+    
+                    # Check and set the first option for scaling, selection, and ML algorithms
+                    elif col_name in ["feature_scaling", "feature_selection", "ml_algorithms"]:
+                        method_name = list(value[0].keys())[0].replace("<", "").replace(">", "")
+                        if method_name in scaling_columns + selection_columns + ml_algorithm_columns:
+                            row[method_name] = 1
+                            
+        row["main_building_blocks"] = main_buling_blocks
+        return row   
+
+    def fit_BNC_and_get_MB(self, file_path):
+        
+        df = pd.read_csv(file_path, header=0, sep=",")
+
+        #Define X and y
+        X = df
+        y = df["class"]
+        X = X.drop("class", axis=1)
+        X = X.drop("main_building_blocks", axis=1)
+        X = X.drop("performance", axis=1)  
+
+        #Define the Bayesian Network Classifier
+        bnc = BNClassifier(learningMethod='GHC', scoringType='BIC')
+        #And, fit it
+        bnc.fit(X, y)
+
+        # Get the Markov Blanket
+        bn = bnc.bn
+        mb = mbcalcul.compileMarkovBlanket(bn, "class")
+        mb.erase("class")   
+
+        mb_list = list(mb)
+        mb_building_blocks = []
+        for bb in mb_list:
+            mb_building_blocks.append(bb[1])
+        return mb_building_blocks
+
+    def sample_based_on_BNC(self, mb_building_blocks):
+        max_sampling = int(self.population_size * 0.1)
+        if(max_sampling == 0):
+            max_sampling += 1
+        count = 0
+
+        feature_definitions = ["General_Descriptors", "Advanced_Descriptors", "Graph_based_Signatures", "Toxicophores", "Fragments"]
+        scalings = ["Normalizer", "MinMaxScaler", "MaxAbsScaler","RobustScaler", "StandardScaler", "NoScaling"]
+        feature_selections = ["VarianceThreshold", "SelectPercentile", "SelectFpr", "SelectFwe", "SelectFdr", "SelectRFE", "NoFeatureSelection"]
+        
+        ml_algorithms = ["NeuroNets", "AdaBoostClassifier", "DecisionTreeClassifier", "ExtraTreeClassifier", 
+                         "RandomForestClassifier","ExtraTreesClassifier", "GradientBoostingClassifier", "XGBClassifier", 
+                         "SVM", "NuSVM"]
+
+        feature_definition_columns = [
+            "General_Descriptors", "Advanced_Descriptors", "Graph_based_Signatures", "Toxicophores", "Fragments"
+        ]
+        
+        scaling_columns = ["normalizer", "minmax_scaler", "maxabs_scaler","robust_scaler", "standard_scaler", "no_scaling"]
+        
+        selection_columns = [
+            "variance_threshold", "select_percentile", "selectfpr", "selectfwe", "selectfdr", "select_rfe", "no_feature_selection"
+        ]
+        ml_algorithm_columns = [
+            "neural_networks", "adaboost", "decision_tree", "extra_tree", "random_rorest",
+            "extra_trees", "gradient_boosting", "xgboost", "svm", "nu_svm"
+        ]
+
+        scaling_dict = {"normalizer": "Normalizer", 
+                           "minmax_scaler": "MinMaxScaler", 
+                           "maxabs_scaler": "MaxAbsScaler",
+                           "robust_scaler": "RobustScaler", 
+                           "standard_scaler":"StandardScaler", 
+                           "no_scaling": "NoScaling"}
+        
+        selection_dict = {"variance_threshold":"VarianceThreshold", 
+                          "select_percentile":"SelectPercentile", 
+                          "selectfpr":"SelectFpr", 
+                          "selectfwe":"SelectFwe", 
+                          "selectfdr":"SelectFdr", 
+                          "select_rfe":"SelectRFE", 
+                          "no_feature_selection":"NoFeatureSelection"}
+        
+        ml_algorithm_dict = {"neural_networks": "NeuroNets", 
+                                "adaboost": "AdaBoostClassifier", 
+                                "decision_tree": "DecisionTreeClassifier", 
+                                "extra_tree": "ExtraTreeClassifier", 
+                                "random_rorest": "RandomForestClassifier",
+                                "extra_trees": "ExtraTreesClassifier", 
+                                "gradient_boosting": "GradientBoostingClassifier", 
+                                "xgboost": "XGBClassifier", 
+                                "svm": "SVM", 
+                                "nu_svm": "NuSVM"}
+
+        feature_definitions_mb = []
+        scalings_mb = []
+        feature_selections_mb = []
+        ml_algorithms_mb = []
+
+        
+        for building_block in mb_building_blocks:
+            if building_block in feature_definition_columns:
+                feature_definitions_mb.append(building_block)
+            elif building_block in scaling_columns:
+                scalings_mb.append(scaling_dict[building_block])
+            elif building_block in selection_columns:
+                feature_selections_mb.append(selection_dict[building_block])
+            elif building_block in ml_algorithm_columns:
+                ml_algorithms_mb.append(ml_algorithm_dict[building_block])                
+                
+
+        sampled_pipelines = []
+        count_aux = 0
+        while count < max_sampling:
+            test_representation = False
+            test_scaling = False
+            test_feature_selection = False
+            test_ml_algorithm = False
+            
+            trial = self.grammar.generate_parse_tree()
+            trial_str = self.grammar.parse_tree_to_string(trial)
+            
+            trial_list = trial_str.split(" # ")            
+            trial_rep = trial_list[0].split(" ")
+            trial_scaling = trial_list[1].split(" ")[0]
+            trial_feat_selection = trial_list[2].split(" ")[0]
+            trial_ml_algorithm = trial_list[3].split(" ")[0]
+           
+            if feature_definitions_mb:
+                for r in trial_rep:
+                    if r in feature_definitions_mb:
+                        test_representation = True
+            else:
+                test_representation = True
+
+         
+            if scalings_mb:
+                if trial_scaling in scalings_mb:
+                    test_scaling = True               
+            else:
+                test_scaling = True
+
+            if feature_selections_mb:            
+                if trial_feat_selection in feature_selections_mb:
+                    test_feature_selection = True               
+            else:
+                test_feature_selection = True
+
+           
+            if ml_algorithms_mb:                  
+                if trial_ml_algorithm in ml_algorithms_mb:
+                    test_ml_algorithm = True               
+            else:
+                test_ml_algorithm = True                  
+            
+            if test_representation and test_scaling and test_feature_selection and test_ml_algorithm:
+                count += 1
+                sampled_pipelines.append(trial)
+            count_aux+=1
+            if(count_aux > 1500):
+                break
+          
+            
+        return sampled_pipelines
+        
+        
     def evolve(self):
         """
         Runs the genetic programming algorithm.
@@ -1035,8 +1249,11 @@ class GrammarBasedGP:
         elif(self.stopping_criterion == "time"):
             condition = time_diff_minutes < (self.max_time - 0.5)
 
-        #seed_index = 1
-        #random.seed(seed_index)
+        current_best = 0.0
+        current_best_threshold = 0.0
+        currewnt_worst_threshold = 0.0
+        df_pipelines = pd.DataFrame()
+        check_repeated = {}
         while condition:   
             print("GENERATION: " + str(generation))
             if(self.stopping_criterion == "generations"):
@@ -1052,22 +1269,103 @@ class GrammarBasedGP:
             fitness_scores = pop_fitness_scores[1]
 
             pop_indices = sorted(range(len(self.population)), key=lambda i: fitness_scores[i], reverse=True)
+            current_best = -1.00
+            for p in self.fitness_cache:
+                f = self.fitness_cache[p]
+                if(f > current_best):
+                    current_best = f
+                
+            
+            current_best_threshold = current_best * 0.8
+            current_worst_threshold = current_best * 0.6            
+            
             elites = [self.population[i] for i in pop_indices[:self.elitism_size]] 
             # Elitism: retain the best individuals
             new_population = []
             new_population.extend(elites)
 
-            #Adding new individuals if the population has >80% of the individuals are the same
-            ind_count_pop = {}            
+            #Recalculating threshold
+            ind_count_pop = {}
+            df_pipelines_aux = pd.DataFrame()
+            
+            if not df_pipelines.empty:
+         
+                # Group by 'main_building_blocks' and calculate the mean of 'performance'
+                average_performance = df_pipelines.groupby('main_building_blocks')['performance'].mean().reset_index(name='average_performance')
+                
+                # Merge the average performance back into the original dataframe
+                df_pipelines_new = df_pipelines.merge(average_performance, on='main_building_blocks')
+                
+                # If you want to keep just one sample per group (with all columns)
+                df_pipelines_new.drop_duplicates(subset='main_building_blocks', keep='first', inplace=True)
+                #remove previous performance column and rename the new one to performance
+                df_pipelines_new = df_pipelines_new.drop("performance", axis=1)
+                df_pipelines_new.rename(columns={'average_performance': 'performance'}, inplace=True)
+                
+
+                #Update the class based on current performance
+                for i, row in df_pipelines.iterrows():
+                    new_row = row                 
+                    if new_row["performance"] >= current_best_threshold:
+                        new_row["class"] = 1
+                    elif new_row["performance"] <= current_worst_threshold:
+                        new_row["class"] = 0
+    
+                    df_pipelines_aux = pd.concat([df_pipelines_aux, pd.DataFrame([new_row])], ignore_index=True)
+
+            df_pipelines = pd.DataFrame()
+            df_pipelines = df_pipelines_aux.copy(deep=True)
+            list_cols =  list(df_pipelines.columns)
+           
+            
+            #checking and creating performance class from individual's evaluation
             for i in pop_indices:
-                ind = self.grammar.parse_tree_to_string(self.population[i])
+                ind = self.grammar.parse_tree_to_string(self.population[i])                
+                new_row = self.convert_pipeline_to_df(self.population[i], ind)
+                if ind not in check_repeated:
+                    if fitness_scores[i] >= current_best_threshold:
+                        new_row["class"] = 1
+                        new_row["performance"] = fitness_scores[i]
+                        df_pipelines = pd.concat([df_pipelines, pd.DataFrame([new_row])], ignore_index=True)
+                        check_repeated[ind] = 1
+                    elif fitness_scores[i] <= current_worst_threshold:
+                        new_row["class"] = 0
+                        new_row["performance"] = fitness_scores[i]
+                        df_pipelines = pd.concat([df_pipelines, pd.DataFrame([new_row])], ignore_index=True)
+                        check_repeated[ind] = 0
+                    
+                #df_pipelines.append()
                 print(ind + "--->" + str(fitness_scores[i]))
                 if(ind not in ind_count_pop):
                     ind_count_pop[ind] = 1
                 else:
                     count = ind_count_pop[ind] + 1
                     ind_count_pop[ind] = count
+            
+            file_path = ""
+            if not df_pipelines.empty:
+                #list_cols =  list(df_pipelines.columns)
+                file_path = "data_bnc.csv"
+                if os.path.exists(file_path):  # Check if the file exists
+                    os.remove(file_path)       # Delete the file
+                df_pipelines.to_csv("data_bnc.csv", header=True, sep=",", index=False)
+            
+            #Fitting and getting the Markov Blanket from the BNC that is causing the performance
+            mb_building_blocks = self.fit_BNC_and_get_MB(file_path)  
 
+            final_file_name_ab = self.experiment_name + "_BNC_markov_blanket.txt"
+            final_result = ""
+            with open(final_file_name_ab, "a") as file:
+                final_result += "GENERATION " + str(generation) + ": " + str(mb_building_blocks)  + "\n"
+                file.write(final_result)
+                file.close()            
+            #Sampling new pipelines in accordance to the Markov Blanket of the class node
+            sampled_pipelines = self.sample_based_on_BNC(mb_building_blocks)
+            #Extending the new population with the sampled pipelines from the BNC's Markov Blanket:
+            new_population.extend(sampled_pipelines)
+
+            
+            #Adding new individuals if the population has >70% of the individuals are the same
             max_count = -1
             for ind in ind_count_pop:
                 ind_count = ind_count_pop[ind]
@@ -1123,7 +1421,7 @@ class GrammarBasedGP:
             time_diff_minutes = (end - start).total_seconds() / 60
             generation += 1
             print("-----------------------------------------------")            
-
+        
         best_indices = sorted(range(len(self.population)), key=lambda i: fitness_scores[i], reverse=True)[:1]
         best_fitness = [fitness_scores[i] for i in pop_indices][0]  
         best_individual = self.population[best_indices[0]]
@@ -1148,6 +1446,8 @@ class GrammarBasedGP:
             file.close()
 
 
+
+
 # Example Usage
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A simple argument parser example")
@@ -1170,6 +1470,7 @@ if __name__ == "__main__":
     metric = args.metric
     exp_name = args.exp_name
     max_time = args.time
+    
     random.seed(seed)  # For reproducibility
 
     # Define grammar
@@ -1183,3 +1484,5 @@ if __name__ == "__main__":
     # Run GGP
     ggp = GrammarBasedGP(grammar, training_dir, testing_dir, fitness_metric=metric, experiment_name=exp_name, seed=seed, max_time=max_time)
     best_program = ggp.evolve()
+    
+ 

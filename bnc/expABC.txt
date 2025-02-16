@@ -17,3 +17,7 @@ expABC;0;6;0.1635;0.3991;0.8586;1.0;0.5357;0.5357;0.6119;;Advanced_Descriptors G
 expABC;0;6;0.1101;0.5563;0.8644;0.6;0.6934;0.8571;0.7761;;General_Descriptors Toxicophores Fragments # NoScaling # SelectFdr 0.35 f_classif # ExtraTreeClassifier log_loss best 19 15 2 None balanced
 expABC;0;6;0.4883;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35
 expABC;0;6;0.4815;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35
+expABC;0;6;0.8294;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35
+expABC;0;6;0.8314;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35
+expABC;0;6;0.8409;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35
+expABC;0;6;0.8535;0.0;0.0;0.0;0.0;0.0;0.0;;General_Descriptors Advanced_Descriptors Graph_based_Signatures Toxicophores # MinMaxScaler # SelectFdr 0.20 f_classif # AdaBoostClassifier SAMME.R 1500 1.35

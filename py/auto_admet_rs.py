@@ -566,10 +566,10 @@ class ScalingTransformer:
 
 
 class GrammarBasedGP:
-    def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 3, 
-                 population_size=20, max_generations=3, max_time=5, mutation_rate=0.15, crossover_rate=0.8, 
-                 crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="auc", 
-                 experiment_name = "expABC", stopping_criterion = "time", seed=0):
+    def __init__(self, grammar, training_dir, testing_dir, fitness_cache={}, num_cores=20, time_budget_minutes_alg_eval = 5, 
+                 population_size=100, max_generations=100, max_time=60, mutation_rate=0.15, crossover_rate=0.8, 
+                 crossover_mutation_rate=0.05, elitism_size=1, fitness_metric="mcc", 
+                 experiment_name = "expABC", stopping_criterion = "time", seed=0):   
         self.grammar = grammar
         self.training_dir = training_dir
         self.testing_dir = testing_dir
@@ -1167,6 +1167,7 @@ if __name__ == "__main__":
     seed = args.seed
     metric = args.metric
     exp_name = args.exp_name
+    max_time = args.time
     
     random.seed(seed)  # For reproducibility
 
@@ -1179,5 +1180,5 @@ if __name__ == "__main__":
     grammar.load_grammar(grammar_text)
 
     # Run GGP
-    ggp = GrammarBasedGP(grammar, training_dir, testing_dir, fitness_metric=metric, experiment_name=exp_name)
+    ggp = GrammarBasedGP(grammar, training_dir, testing_dir, fitness_metric=metric, experiment_name=exp_name, seed=seed, max_time=max_time)
     best_program = ggp.evolve()
