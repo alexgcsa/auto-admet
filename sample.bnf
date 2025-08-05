@@ -1,9 +1,0 @@
-
-    <start> ::= <sentence>
-    <sentence> ::= <noun-phrase> <verb-phrase>
-    <noun-phrase> ::= <article> <noun>
-    <verb-phrase> ::= <verb> <noun-phrase> | <verb>
-    <article> ::= the | a
-    <noun> ::= cat | dog | man | telescope
-    <verb> ::= sees | pets | chases
-    

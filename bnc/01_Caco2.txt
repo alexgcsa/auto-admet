@@ -1,2 +1,0 @@
-01_Caco2;1;30;68.7035;0.195;0.8505;1.0;0.4688;0.4688;0.4925;;General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # SelectRFE 0.15 0.325 # GradientBoostingClassifier 55 friedman_mse 19 13 7 sqrt log_loss
-01_Caco2;1;30;69.4518;0.195;0.8505;1.0;0.4688;0.4688;0.4925;;General_Descriptors Advanced_Descriptors Graph_based_Signatures # Normalizer l2 # SelectRFE 0.15 0.325 # GradientBoostingClassifier 55 friedman_mse 19 13 7 sqrt log_loss
